@@ -9,7 +9,7 @@ from partitura.utils.generic import interp1d
 from partitura.utils.music import get_time_units_from_note_array
 from partitura.performance import Performance, PerformedPart
 
-from eval.metrics.dynamics import PerformedChord
+from .dynamics import PerformedChord
 
 
 def chordify_perf_note_array(
