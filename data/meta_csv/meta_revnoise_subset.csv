@@ -5,4 +5,3 @@ asap_maestro,Chopin,Scherzos_31,train,Jussow11M,disklavier,3
 asap_maestro,Liszt,Transcendental_Etudes_11,test,Huang18M,maestro,4
 asap_maestro,Rachmaninoff,Preludes_op_23_4,train,WuuE07M,disklavier,5
 asap_maestro,Schubert,Piano_Sonatas_664-1,test,KabuliL10M,disklavier,6
-batik_mozart,Mozart,kv332_1,batik_mozart,Batik,batik_audio,7
