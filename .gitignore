@@ -163,4 +163,3 @@ cython_debug/
 
 data/maestro*
 data/revnoise*
-**/ph_*
