@@ -63,7 +63,7 @@ def compute_piece_metric(metric, subset, piece_path, composer, title, split, pie
     if subset != 'revnoise':
         
         files = sorted(os.listdir(piece_path))
-        performers = [f.split('.')[0] for f in files if f.endswith('.match')]
+        performers = [f.split('.')[0] for f in files if f.endswith('.mid')]
         
         with open(results_csv, mode) as f:
             csvwriter = csv.writer(f)
@@ -80,16 +80,11 @@ def compute_piece_metric(metric, subset, piece_path, composer, title, split, pie
                     gt_notelist = create_note_list(gt_na)
 
                 print(f' --- performer {pidx+1}/{len(performers):2d}: {performer}')
-                if subset == 'maestro_subset':
-                    oa_transcriptions = os.path.join(
-                        piece_path, f'{performer}_maestro')
-                    disklavier_transcriptions = os.path.join(
-                        piece_path, f'{performer}_disklavier')
-
-                else:
-                    oa_transcriptions = os.path.join(piece_path, 'batik_audio')
-                    disklavier_transcriptions = os.path.join(
-                        piece_path, 'batik_disklavier')
+            
+                oa_transcriptions = os.path.join(
+                    piece_path, f'{performer}_maestro')
+                disklavier_transcriptions = os.path.join(
+                    piece_path, f'{performer}_disklavier')
                 
                 for rec_env, rec_tr in zip(['maestro', 'disklavier'], 
                     [oa_transcriptions, disklavier_transcriptions]):
