@@ -49,21 +49,21 @@ def plot_piano_roll(piano_roll, params_dict=PERF_PIANO_ROLL_PARAMS, out_path=Non
 
 
 def compute_transcription_benchmark_framewise(
-    gt_piano_roll, pred_piano_roll, verbose=False
+    ref_piano_roll, pred_piano_roll, verbose=False
 ):
-    time_diff = gt_piano_roll.shape[1] - pred_piano_roll.shape[1]
-    padding_csc = csc_matrix((gt_piano_roll.shape[0], abs(time_diff)), dtype=np.int8)
+    time_diff = ref_piano_roll.shape[1] - pred_piano_roll.shape[1]
+    padding_csc = csc_matrix((ref_piano_roll.shape[0], abs(time_diff)), dtype=np.int8)
 
     if time_diff > 0:
         pred_piano_roll = hstack((pred_piano_roll, padding_csc))
     else:
-        gt_piano_roll = hstack((gt_piano_roll, padding_csc))
+        ref_piano_roll = hstack((ref_piano_roll, padding_csc))
 
-    gt_piano_roll = gt_piano_roll.astype("bool").toarray()
+    ref_piano_roll = ref_piano_roll.astype("bool").toarray()
     pred_piano_roll = pred_piano_roll.astype("bool").toarray()
-    true_positives = np.sum(np.logical_and(gt_piano_roll == 1, pred_piano_roll == 1))
-    false_positives = np.sum(np.logical_and(gt_piano_roll == 0, pred_piano_roll == 1))
-    false_negatives = np.sum(np.logical_and(gt_piano_roll == 1, pred_piano_roll == 0))
+    true_positives = np.sum(np.logical_and(ref_piano_roll == 1, pred_piano_roll == 1))
+    false_positives = np.sum(np.logical_and(ref_piano_roll == 0, pred_piano_roll == 1))
+    false_negatives = np.sum(np.logical_and(ref_piano_roll == 1, pred_piano_roll == 0))
 
     precision = true_positives / (true_positives + false_positives)
     recall = true_positives / (true_positives + false_negatives)
@@ -113,22 +113,20 @@ def create_note_list(note_array, remove_silence=True):
     return note_list
 
 
-def ir_metrics_notewise(gt_notelist, pred_notelist, onset_only=False, verbose=False):
+def ir_metrics_notewise(ref_notelist, pred_notelist, onset_only=False, verbose=False):
 
-    if pred_notelist.shape[0] == 0 and gt_notelist.shape[0] != 0:
+    if pred_notelist.shape[0] == 0 and ref_notelist.shape[0] != 0:
         return 0, 0, 0, 0
-    elif pred_notelist.shape[0] != 0 and gt_notelist.shape[0] == 0:
+    elif pred_notelist.shape[0] != 0 and ref_notelist.shape[0] == 0:
         return 0, 0, 0, 0
-    elif pred_notelist.shape[0] == 0 and gt_notelist.shape[0] == 0:
+    elif pred_notelist.shape[0] == 0 and ref_notelist.shape[0] == 0:
         # no notes in the prediction and no notes in the ground truth
         return 1, 1, 1, 1
 
     # check if we have zero or negative duration notes in the ground truth or prediction
-    if np.any(gt_notelist[:, 1] <= gt_notelist[:, 0]):
-        zero_negative_durations_idxs = np.where(gt_notelist[:, 1] <= gt_notelist[:, 0])[
-            0
-        ]
-        gt_notelist = np.delete(gt_notelist, zero_negative_durations_idxs, axis=0)
+    if np.any(ref_notelist[:, 1] <= ref_notelist[:, 0]):
+        zero_negative_durations_idxs = np.where(ref_notelist[:, 1] <= ref_notelist[:, 0])[0]
+        ref_notelist = np.delete(ref_notelist, zero_negative_durations_idxs, axis=0)
 
     if np.any(pred_notelist[:, 1] <= pred_notelist[:, 0]):
         zero_negative_durations_idxs = np.where(
@@ -139,8 +137,8 @@ def ir_metrics_notewise(gt_notelist, pred_notelist, onset_only=False, verbose=Fa
     offset_ratio = None if onset_only else 0.2
     precision, recall, f_score, average_overlap_ratio = (
             mir_eval_transcription.precision_recall_f1_overlap(
-                ref_intervals=gt_notelist[:, :2],
-                ref_pitches=gt_notelist[:, 2],
+                ref_intervals=ref_notelist[:, :2],
+                ref_pitches=ref_notelist[:, 2],
                 est_intervals=pred_notelist[:, :2],
                 est_pitches=pred_notelist[:, 2],
                 onset_tolerance=ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL,
@@ -166,21 +164,21 @@ def ir_metrics_notewise(gt_notelist, pred_notelist, onset_only=False, verbose=Fa
     return precision, recall, f_score, average_overlap_ratio
 
 
-def ir_metrics_notewise_with_velocity(gt_notelist, pred_notelist, verbose=False):
+def ir_metrics_notewise_with_velocity(ref_notelist, pred_notelist, verbose=False):
 
-    if pred_notelist.shape[0] == 0 and gt_notelist.shape[0] != 0:
+    if pred_notelist.shape[0] == 0 and ref_notelist.shape[0] != 0:
         return 0, 0, 0, 0
-    elif pred_notelist.shape[0] != 0 and gt_notelist.shape[0] == 0:
+    elif pred_notelist.shape[0] != 0 and ref_notelist.shape[0] == 0:
         return 0, 0, 0, 0
-    elif pred_notelist.shape[0] == 0 and gt_notelist.shape[0] == 0:
+    elif pred_notelist.shape[0] == 0 and ref_notelist.shape[0] == 0:
         # no notes in the prediction and no notes in the ground truth
         return 1, 1, 1, 1
 
     # check if we have zero or negative duration notes in the ground truth or prediction
-    if np.any(gt_notelist[:, 1] <= gt_notelist[:, 0]):
-        zero_negative_durations_idxs = np.where(gt_notelist[:, 1] <= gt_notelist[:, 0])[0]
-        gt_notelist = np.delete(
-            gt_notelist, zero_negative_durations_idxs, axis=0)
+    if np.any(ref_notelist[:, 1] <= ref_notelist[:, 0]):
+        zero_negative_durations_idxs = np.where(ref_notelist[:, 1] <= ref_notelist[:, 0])[0]
+        ref_notelist = np.delete(
+            ref_notelist, zero_negative_durations_idxs, axis=0)
 
     if np.any(pred_notelist[:, 1] <= pred_notelist[:, 0]):
         zero_negative_durations_idxs = np.where(
@@ -190,9 +188,9 @@ def ir_metrics_notewise_with_velocity(gt_notelist, pred_notelist, verbose=False)
 
     precision, recall, f_score, average_overlap_ratio = (
         mir_eval_transcription_velocity.precision_recall_f1_overlap(
-            ref_intervals=gt_notelist[:, :2],
-            ref_pitches=gt_notelist[:, 2],
-            ref_velocities=gt_notelist[:, 3],
+            ref_intervals=ref_notelist[:, :2],
+            ref_pitches=ref_notelist[:, 2],
+            ref_velocities=ref_notelist[:, 3],
             est_intervals=pred_notelist[:, :2],
             est_pitches=pred_notelist[:, 2],
             est_velocities=pred_notelist[:, 3],
@@ -217,47 +215,3 @@ def ir_metrics_notewise_with_velocity(gt_notelist, pred_notelist, verbose=False)
         print(f"average overlap: {average_overlap_ratio:.4f}")
 
     return precision, recall, f_score, average_overlap_ratio
-
-
-# def compute_ir_metrics_piecewise(
-#     gt_midi, pred_midi, type="notewise_velocity", verbose=True):
-
-#     # load ground truth and prediction
-#     gt_perf = pt.load_performance_midi(gt_midi)
-#     gt_na = gt_perf.note_array()
-#     gt_pr = pt.utils.compute_pianoroll(gt_na, **PERF_PIANO_ROLL_PARAMS)
-#     gt_notelist = create_note_list(gt_na)
-
-#     pred_perf = pt.load_performance_midi(pred_midi)
-#     pred_na = pred_perf.note_array()
-#     pred_pr = pt.utils.compute_pianoroll(pred_na, **PERF_PIANO_ROLL_PARAMS)
-#     pred_notelist = create_note_list(pred_na)
-
-#     # compute transcription benchmark(s):
-#     if type == "both":
-#         fr_pr, fr_r, fr_f = compute_transcription_benchmark_framewise(
-#             gt_pr, pred_pr, verbose=verbose
-#         )
-#         n_pr, n_r, n_f, n_aor = ir_metrics_notewise(
-#             gt_notelist, pred_notelist, verbose=verbose
-#         )
-
-#         return (fr_pr, fr_r, fr_f), (n_pr, n_r, n_f, n_aor)
-
-#     elif type == "framewise":
-#         fr_pr, fr_r, fr_f = compute_transcription_benchmark_framewise(
-#             gt_pr, pred_pr, verbose=verbose
-#         )
-#         return fr_pr, fr_r, fr_f
-
-#     elif type == "notewise":
-#         n_pr, n_r, n_f, n_aor = ir_metrics_notewise(
-#             gt_notelist, pred_notelist, verbose=verbose
-#         )
-        
-#     elif type == 'notewise_velocity':
-#         n_pr, n_r, n_f, n_aor = ir_metrics_notewise_with_velocity(
-#             gt_notelist, pred_notelist, verbose=verbose
-#         )
-        
-#         return n_pr, n_r, n_f, n_aor
