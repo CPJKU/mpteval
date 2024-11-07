@@ -288,33 +288,38 @@ def get_kor_stream_funcs(
 
 
 def articulation_metrics_from_perf(
-    tr_perf: Union[PerformedPart, Performance],
-    gt_perf: Union[PerformedPart, Performance],
+    ref_perf: Union[PerformedPart, Performance],
+    pred_perf: Union[PerformedPart, Performance],
     pedal_range: List[int] = [64, 127],
 ) -> np.ndarray:
+    
+    # check correct types
+    if isinstance(ref_perf, Performance):
+        ref_pparts = ref_perf.performedparts
+    elif isinstance(ref_perf, PerformedPart):
+        ref_pparts = [ref_perf]
 
-    if isinstance(tr_perf, Performance):
-        pred_pparts = tr_perf.performedparts
-    elif isinstance(tr_perf, PerformedPart):
-        pred_pparts = [tr_perf]
+    if isinstance(pred_perf, Performance):
+        pred_pparts = pred_perf.performedparts
+    elif isinstance(pred_perf, PerformedPart):
+        pred_pparts = [pred_perf]
 
-    if isinstance(gt_perf, Performance):
-        gt_pparts = gt_perf.performedparts
-    elif isinstance(gt_perf, PerformedPart):
-        gt_pparts = [gt_perf]
-
-    for ppart in gt_pparts:
+    # adjust sustain pedal threshold
+    for ppart in ref_pparts:
         ppart.sustain_pedal_threshold = 64
     
-    gt_note_array = gt_perf.note_array()
-    kor_melody_gt_func, kor_bass_gt_func = get_kor_stream_funcs(gt_note_array)
-
-    onsets = np.unique(gt_note_array["onset_sec"])
-
-    melody_kor_gt = kor_melody_gt_func(onsets)
-    bass_kor_gt = kor_bass_gt_func(onsets)
-    ratio_kor_gt = melody_kor_gt / bass_kor_gt
-
+    # get reference note array and reference KOR functions for melody and bass stream
+    ref_note_array = ref_perf.note_array()
+    ref_kor_melody_func, ref_kor_melody_bass_func = get_kor_stream_funcs(ref_note_array)
+    
+    ref_onsets = np.unique(ref_note_array["onset_sec"])
+    
+    # get reference KOR values for melody and bass stream, and their ratio
+    ref_melody_kor = ref_kor_melody_func(ref_onsets)
+    ref_bass_kor = ref_kor_melody_bass_func(ref_onsets)
+    ref_ratio_kor = ref_melody_kor / ref_bass_kor
+    
+    # init and compute metrics array
     metrics = np.zeros(
         len(pedal_range),
         dtype=[
@@ -326,23 +331,26 @@ def articulation_metrics_from_perf(
     )
     for i, spt in enumerate(pedal_range):
         metrics[i]["pedal_threshold"] = spt
-
+        
+        # adjust sustain pedal threshold
         for ppart in pred_pparts:
             ppart.sustain_pedal_threshold = spt
 
-        pred_note_array = tr_perf.note_array()
+        # get predicted note array and KOR functions, and values for melody and bass stream
+        pred_note_array = pred_perf.note_array()
+        
+        pred_kor_melody_func, pred_kor_bass_func = get_kor_stream_funcs(pred_note_array)
 
-        kor_melody_pred_func, kor_bass_pred_func = get_kor_stream_funcs(pred_note_array)
+        pred_melody_kor = pred_kor_melody_func(ref_onsets)
+        pred_bass_kor = pred_kor_bass_func(ref_onsets)
+        pred_ratio_kor = pred_melody_kor / pred_bass_kor
+        
+        # compare reference and prediction
+        corr_melody = np.corrcoef(ref_melody_kor, pred_melody_kor)[0, 1]
 
-        melody_kor_pred = kor_melody_pred_func(onsets)
-        bass_kor_pred = kor_bass_pred_func(onsets)
-        ratio_kor_pred = melody_kor_pred / bass_kor_pred
+        corr_bass = np.corrcoef(ref_bass_kor, pred_bass_kor)[0, 1]
 
-        corr_melody = np.corrcoef(melody_kor_gt, melody_kor_pred)[0, 1]
-
-        corr_bass = np.corrcoef(bass_kor_gt, bass_kor_pred)[0, 1]
-
-        corr_ratio = np.corrcoef(ratio_kor_gt, ratio_kor_pred)[0, 1]
+        corr_ratio = np.corrcoef(ref_ratio_kor, pred_ratio_kor)[0, 1]
 
         metrics[i]["melody_kor_corr"] = corr_melody
         metrics[i]["bass_kor_corr"] = corr_bass
