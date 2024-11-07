@@ -276,8 +276,8 @@ def get_upper_lower_stream_dynamic_range(
 
 
 def dynamics_metrics_from_perf(
-    tr_perf: Union[PerformedPart, Performance],
-    gt_perf: Union[PerformedPart, Performance],
+    ref_perf: Union[PerformedPart, Performance],
+    pred_perf: Union[PerformedPart, Performance],
     use_true_note_offs: bool = True,
     r_b: float = 44.0
 ) -> float:
@@ -285,89 +285,30 @@ def dynamics_metrics_from_perf(
     # Use true note offs
     if use_true_note_offs:
 
-        for ppart in gt_perf:
+        for ppart in ref_perf:
             ppart.sustain_pedal_threshold = 127
 
-        for ppart in tr_perf:
+        for ppart in pred_perf:
             ppart.sustain_pedal_threshold = 127
+    
+    # Create reference and predicted note arrays and compute dynamic range functions
+    ref_note_array = ref_perf.note_array()
+    pred_note_array = pred_perf.note_array()
 
-    gt_note_array = gt_perf.note_array()
-    tr_note_array = tr_perf.note_array()
-
-    dynamic_range_gt_func, _, _ = get_upper_lower_stream_dynamic_range(
-        note_array=gt_note_array,
+    ref_dynamic_range_func, _, _ = get_upper_lower_stream_dynamic_range(
+        note_array=ref_note_array,
         r_b=r_b,
     )
 
-    dynamic_range_tr_func, _, _ = get_upper_lower_stream_dynamic_range(
-        note_array=tr_note_array,
+    pred_dynamic_range_func, _, _ = get_upper_lower_stream_dynamic_range(
+        note_array=pred_note_array,
         r_b=r_b,
     )
-
+    
+    # Compute correlation between reference and predicted dynamic range functions
     corr = np.corrcoef(
-        dynamic_range_tr_func(gt_note_array["onset_sec"]),
-        dynamic_range_gt_func(gt_note_array["onset_sec"]),
+        ref_dynamic_range_func(ref_note_array["onset_sec"]),
+        pred_dynamic_range_func(ref_note_array["onset_sec"]),
     )[0, 1]
 
     return corr
-
-
-# if __name__ == "__main__":
-
-#     match_fn = (
-#         "/Users/carlos/Downloads/Beethoven_Piano_Sonatas_18-1/kong_ChenGuang03M.match"
-#     )
-
-#     gt_midi_fn = "/Users/carlos/Downloads/Beethoven_Piano_Sonatas_18-1/ChenGuang03M.mid"
-
-#     tr_midi_fn = "/Users/carlos/Downloads/Beethoven_Piano_Sonatas_18-1/kong_ChenGuang03M.mid"
-
-#     use_true_note_offs = False
-#     gt_perf = pt.load_performance_midi(gt_midi_fn)
-
-#     tr_perf = pt.load_performance_midi(tr_midi_fn)
-
-#     # Use true note offs
-#     if use_true_note_offs:
-
-#         for ppart in gt_perf:
-#             ppart.sustain_pedal_threshold = 127
-
-#         for ppart in tr_perf:
-#             ppart.sustain_pedal_threshold = 127
-
-#     gt_note_array = gt_perf.note_array()
-#     tr_note_array = tr_perf.note_array()
-
-#     dynamic_range_gt_func, _, _ = get_upper_lower_stream_dynamic_range(
-#         note_array=gt_note_array,
-#         r_b=44.0,
-#     )
-
-#     dynamic_range_tr_func, _, _ = get_upper_lower_stream_dynamic_range(
-#         note_array=tr_note_array,
-#         r_b=44.0,
-#     )
-
-#     corr = np.corrcoef(
-#         dynamic_range_tr_func(gt_note_array["onset_sec"]),
-#         dynamic_range_gt_func(gt_note_array["onset_sec"]),
-#     )[0, 1]
-
-#     plt.plot(
-#         tr_note_array["onset_sec"],
-#         dynamic_range_tr_func(tr_note_array["onset_sec"]),
-#         color="firebrick",
-#         label="ground truth",
-#     )
-
-#     plt.plot(
-#         gt_note_array["onset_sec"],
-#         dynamic_range_tr_func(gt_note_array["onset_sec"]),
-#         color="navy",
-#         label="transcription",
-#     )
-
-#     plt.title(f"correlation {corr*100:.2f}")
-
-#     plt.show()
