@@ -71,13 +71,13 @@ def compute_piece_metric(metric, subset, piece_path, composer, title, split, pie
                 csvwriter.writerow(header)
 
             for pidx, performer in enumerate(performers):
-                gt_midi = os.path.join(piece_path, f'{performer}.mid')
-                gt_perf = pt.load_performance_midi(gt_midi)
-                gt_na = gt_perf.note_array()
+                ref_midi = os.path.join(piece_path, f'{performer}.mid')
+                ref_perf = pt.load_performance_midi(ref_midi)
+                ref_na = ref_perf.note_array()
                 if metric == 'frame':
-                    gt_pr = pt.utils.compute_pianoroll(gt_na, **PERF_PIANO_ROLL_PARAMS)
+                    ref_pr = pt.utils.compute_pianoroll(ref_na, **PERF_PIANO_ROLL_PARAMS)
                 elif metric == 'note_offset' or metric == 'note_offset_velocity':
-                    gt_notelist = create_note_list(gt_na)
+                    ref_notelist = create_note_list(ref_na)
 
                 print(f' --- performer {pidx+1}/{len(performers):2d}: {performer}')
             
@@ -86,49 +86,48 @@ def compute_piece_metric(metric, subset, piece_path, composer, title, split, pie
                 disklavier_transcriptions = os.path.join(
                     piece_path, f'{performer}_disklavier')
                 
-                for rec_env, rec_tr in zip(['maestro', 'disklavier'], 
-                    [oa_transcriptions, disklavier_transcriptions]):
+                for rec_env, rec_tr in zip(['maestro', 'disklavier'], [oa_transcriptions, disklavier_transcriptions]):
                     print(f' --- {rec_env} audio transcriptions:')
-                    for tr_mid in os.listdir(rec_tr):
-                        if not tr_mid.endswith('.mid'):
+                    for pred_mid in os.listdir(rec_tr):
+                        if not pred_mid.endswith('.mid'):
                             continue
                         else:
-                            print(f' ------ transcription {tr_mid}')
-                            tr_midi = os.path.join(rec_tr, tr_mid)
-                            tr_perf = pt.load_performance_midi(tr_midi)
-                            tr_na = tr_perf.note_array()
-                            model = tr_mid.split('.')[0].split('_')[0]
+                            print(f' ------ transcription {pred_mid}')
+                            pred_midi = os.path.join(rec_tr, pred_mid)
+                            pred_perf = pt.load_performance_midi(pred_midi)
+                            pred_na = pred_perf.note_array()
+                            model = pred_mid.split('.')[0].split('_')[0]
                             
                             if metric in ['frame', 'note_offset', 'note_offset_velocity']:
                                 if metric == 'frame':
-                                    tr_pr = pt.utils.compute_pianoroll(tr_na, **PERF_PIANO_ROLL_PARAMS)
-                                    p, r, f = compute_transcription_benchmark_framewise(gt_pr, tr_pr)
+                                    pred_pr = pt.utils.compute_pianoroll(pred_na, **PERF_PIANO_ROLL_PARAMS)
+                                    p, r, f = compute_transcription_benchmark_framewise(ref_pr, pred_pr)
                                 else:
-                                    tr_notelist = create_note_list(tr_na)
+                                    pred_notelist = create_note_list(pred_na)
                                     if metric == 'note_offset':
-                                        p, r, f, _ = ir_metrics_notewise(gt_notelist, tr_notelist)
+                                        p, r, f, _ = ir_metrics_notewise(ref_notelist, pred_notelist)
                                     elif metric == 'note_offset_velocity':
-                                        p, r, f, _ = ir_metrics_notewise_with_velocity(gt_notelist, tr_notelist)
+                                        p, r, f, _ = ir_metrics_notewise_with_velocity(ref_notelist, pred_notelist)
                                     
                                 res = [composer, title, split, performer, model, rec_env, p, r, f]
                                 
                             elif metric == 'dynamics':
-                                dyn_corr = dynamics_metrics_from_perf(tr_perf, gt_perf)
+                                dyn_corr = dynamics_metrics_from_perf(ref_perf, pred_perf)
                                 res = [composer, title, split, performer, model, rec_env, dyn_corr]
                                 
                             elif metric == 'articulation':
-                                art_metrics = articulation_metrics_from_perf(tr_perf, gt_perf)
+                                art_metrics = articulation_metrics_from_perf(ref_perf, pred_perf)
                                 art_metrics_64, art_metrics_127 = art_metrics[0], art_metrics[1]
                                 melody_kor_corr_64, bass_kor_corr_64, ratio_kor_corr_64, _ = art_metrics_64
                                 melody_kor_corr_127, bass_kor_corr_127, ratio_kor_corr_127, _ = art_metrics_127
                                 res = [composer, title, split, performer, model, rec_env, melody_kor_corr_64, bass_kor_corr_64, ratio_kor_corr_64, melody_kor_corr_127, bass_kor_corr_127, ratio_kor_corr_127]
                                 
                             elif metric  == 'timing':
-                                timing_metrics = timing_metrics_from_perf(tr_perf, gt_perf)
+                                timing_metrics = timing_metrics_from_perf(ref_perf, pred_perf)
                                 res = [composer, title, split, performer, model, rec_env ,*timing_metrics[0]]   
                                 
                             elif metric  == 'harmony':
-                                harmony_metrics = harmony_metrics_from_perf(tr_perf, gt_perf)
+                                harmony_metrics = harmony_metrics_from_perf(ref_perf, pred_perf)
                                 res = [composer, title, split, performer, model, rec_env ,*harmony_metrics[0]]
 
                             res = [np.round(r, 4) if isinstance(r, float) else r for r in res]
@@ -141,68 +140,68 @@ def compute_piece_metric(metric, subset, piece_path, composer, title, split, pie
         header.remove('performer')
 
         files = [f for f in sorted(os.listdir(piece_path)) if f.startswith(str(piece_id)) and f.endswith('.mid')] # exclude the GT trancsriptions
-        gt_midi = [f for f in files if f.startswith(str(piece_id) + 'xx')][0]
-        files.remove(gt_midi) # 45 files : 15 (rev,n) combinations x 3 models 
+        ref_midi = [f for f in files if f.startswith(str(piece_id) + 'xx')][0]
+        files.remove(ref_midi) # 45 files : 15 (rev,n) combinations x 3 models 
         
-        gt_perf = pt.load_performance_midi(os.path.join(piece_path,gt_midi))
-        gt_na = gt_perf.note_array()
+        ref_perf = pt.load_performance_midi(os.path.join(piece_path,ref_midi))
+        ref_na = ref_perf.note_array()
         if metric == 'frame':
-            gt_pr = pt.utils.compute_pianoroll(gt_na, **PERF_PIANO_ROLL_PARAMS)
+            ref_pr = pt.utils.compute_pianoroll(ref_na, **PERF_PIANO_ROLL_PARAMS)
         elif metric == 'note_offset' or metric == 'note_offset_velocity':
-            gt_notelist = create_note_list(gt_na)
+            ref_notelist = create_note_list(ref_na)
         
         with open(results_csv, mode) as f:
             csvwriter = csv.writer(f)
             if mode == 'w+':
                 csvwriter.writerow(header)
             
-            for i, tr_mid in tqdm(enumerate(files)):
+            for i, pred_mid in tqdm(enumerate(files)):
                 print(f' --- {i+1:2d}/{len(files)}')
-                tr_midi = os.path.join(piece_path, tr_mid)
-                tr_perf = pt.load_performance_midi(tr_midi)
-                tr_na = tr_perf.note_array()
-                if tr_na.shape[0] == 0:
-                    print(f'!!!!! EMPTY {tr_mid}')
+                pred_midi = os.path.join(piece_path, pred_mid)
+                pred_perf = pt.load_performance_midi(pred_midi)
+                pred_na = pred_perf.note_array()
+                if pred_na.shape[0] == 0:
+                    print(f'!!!!! EMPTY {pred_mid}')
                     continue
                 
-                model = tr_mid.split('.')[0].split('_')[-1]
-                reverb = REVERB_IRF[int(tr_mid.split('_')[0][1])]
-                snr = SNR_LEVELS[int(tr_mid.split('_')[0][2])]
+                model = pred_mid.split('.')[0].split('_')[-1]
+                reverb = REVERB_IRF[int(pred_mid.split('_')[0][1])]
+                snr = SNR_LEVELS[int(pred_mid.split('_')[0][2])]
                 
                 if metric in ['frame', 'note_offset', 'note_offset_velocity']:
                     if metric == 'frame':
-                        tr_pr = pt.utils.compute_pianoroll(
-                            tr_na, **PERF_PIANO_ROLL_PARAMS)
+                        pred_pr = pt.utils.compute_pianoroll(
+                            pred_na, **PERF_PIANO_ROLL_PARAMS)
                         p, r, f = compute_transcription_benchmark_framewise(
-                            gt_pr, tr_pr)
+                            ref_pr, pred_pr)
                     else:
-                        tr_notelist = create_note_list(tr_na)
+                        pred_notelist = create_note_list(pred_na)
                         if metric == 'note_offset':
                             p, r, f, _ = ir_metrics_notewise(
-                                gt_notelist, tr_notelist)
+                                ref_notelist, pred_notelist)
                         elif metric == 'note_offset_velocity':
                             p, r, f, _ = ir_metrics_notewise_with_velocity(
-                                gt_notelist, tr_notelist)
+                                ref_notelist, pred_notelist)
 
                     res = [composer, title, split, model, audio, p, r, f]
 
                 elif metric == 'dynamics':
-                    dyn_corr = dynamics_metrics_from_perf(tr_perf, gt_perf)
+                    dyn_corr = dynamics_metrics_from_perf(ref_perf, pred_perf)
                     res = [composer, title, split, model, audio, dyn_corr]
                     
                 elif metric == 'articulation':
-                    art_metrics = articulation_metrics_from_perf(tr_perf, gt_perf)
+                    art_metrics = articulation_metrics_from_perf(ref_perf, pred_perf)
                     art_metrics_64, art_metrics_127 = art_metrics[0], art_metrics[1]
                     melody_kor_corr_64, bass_kor_corr_64, ratio_kor_corr_64, _ = art_metrics_64
                     melody_kor_corr_127, bass_kor_corr_127, ratio_kor_corr_127, _ = art_metrics_127
                     res = [composer, title, split, model, audio, melody_kor_corr_64, bass_kor_corr_64, ratio_kor_corr_64, melody_kor_corr_127, bass_kor_corr_127, ratio_kor_corr_127]
                     
                 elif metric  == 'timing':
-                    timing_metrics = timing_metrics_from_perf(tr_perf, gt_perf)
+                    timing_metrics = timing_metrics_from_perf(ref_perf, pred_perf)
                     res = [composer, title, split, model, audio ,*timing_metrics[0]]   
                     
                 elif metric  == 'harmony':
-                    harmony_metrics = harmony_metrics_from_perf(tr_perf, gt_perf)
+                    harmony_metrics = harmony_metrics_from_perf(ref_perf, pred_perf)
                     res = [composer, title, split, model, audio ,*harmony_metrics[0]]
             
                 res = [np.round(r, 4) if isinstance(r, float) else r for r in res]
