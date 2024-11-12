@@ -76,7 +76,7 @@ def harmony_metrics_from_perf(
         ],
     )
 
-    # get melody and accompaniment for gt performance
+    # get melody and accompaniment for reference performance
     ref_note_array = ref_perf.note_array()
     ref_onsets = np.unique(ref_note_array["onset_sec"])
 

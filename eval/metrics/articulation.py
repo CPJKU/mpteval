@@ -310,13 +310,13 @@ def articulation_metrics_from_perf(
     
     # get reference note array and reference KOR functions for melody and bass stream
     ref_note_array = ref_perf.note_array()
-    ref_kor_melody_func, ref_kor_melody_bass_func = get_kor_stream_funcs(ref_note_array)
+    ref_melody_kor_func, ref_bass_kor_func = get_kor_stream_funcs(ref_note_array)
     
     ref_onsets = np.unique(ref_note_array["onset_sec"])
     
     # get reference KOR values for melody and bass stream, and their ratio
-    ref_melody_kor = ref_kor_melody_func(ref_onsets)
-    ref_bass_kor = ref_kor_melody_bass_func(ref_onsets)
+    ref_melody_kor = ref_melody_kor_func(ref_onsets)
+    ref_bass_kor = ref_bass_kor_func(ref_onsets)
     ref_ratio_kor = ref_melody_kor / ref_bass_kor
     
     # init and compute metrics array
@@ -339,10 +339,10 @@ def articulation_metrics_from_perf(
         # get predicted note array and KOR functions, and values for melody and bass stream
         pred_note_array = pred_perf.note_array()
         
-        pred_kor_melody_func, pred_kor_bass_func = get_kor_stream_funcs(pred_note_array)
+        pred_melody_kor_func, pred_bass_kor_func = get_kor_stream_funcs(pred_note_array)
 
-        pred_melody_kor = pred_kor_melody_func(ref_onsets)
-        pred_bass_kor = pred_kor_bass_func(ref_onsets)
+        pred_melody_kor = pred_melody_kor_func(ref_onsets)
+        pred_bass_kor = pred_bass_kor_func(ref_onsets)
         pred_ratio_kor = pred_melody_kor / pred_bass_kor
         
         # compare reference and prediction

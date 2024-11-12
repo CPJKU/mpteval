@@ -5,34 +5,34 @@ Timing metrics for transcription:
 - Kullback-Leibler divergence between IOI histograms for melody and accompaniment streams
 """
 
-from typing import Callable
+from typing import Callable, Union, Tuple
 import numpy as np
 from scipy.stats import entropy
 
 import partitura as pt
 from partitura.utils.generic import interp1d
-from partitura.performance import PerformedPart
+from partitura.performance import PerformedPart, Performance
 
 from helpers.dtw import fast_dynamic_time_warping
 from eval.metrics.articulation import skyline_melody_identification_from_array
 
 
-def compute_ioi_stream(note_array):
-    
-    onsets = note_array['onset_sec']
-    sort_idxs = note_array['onset_sec'].argsort()
+def compute_ioi_stream(note_array: np.ndarray) -> np.ndarray:
+
+    onsets = note_array["onset_sec"]
+    sort_idxs = note_array["onset_sec"].argsort()
     ioi = np.zeros(onsets.shape)
     ioi[:-1] = onsets[sort_idxs[1:]] - onsets[sort_idxs[:-1]] + 1e-6
-    # add last note duration to last ioi
-    ioi[-1] = note_array[sort_idxs[-1]]['duration_sec'] + 1e-6 
-    
+    # add last note duration as last IOI
+    ioi[-1] = note_array[sort_idxs[-1]]["duration_sec"] + 1e-6
+
     return ioi
 
 
 def get_ioi_stream_func(note_array: np.ndarray) -> Callable[[np.ndarray], np.ndarray]:
 
     ioi = compute_ioi_stream(note_array)
-    
+
     ioi_stream_func = interp1d(
         x=note_array["onset_sec"],
         y=ioi,
@@ -46,70 +46,65 @@ def get_ioi_stream_func(note_array: np.ndarray) -> Callable[[np.ndarray], np.nda
 
 
 def timing_metrics_from_perf(
-    gt_perf: PerformedPart,
-    pred_perf: PerformedPart,
-) -> np.ndarray:    
-    
-    timing_metrics = np.zeros(1,
-                              dtype=[
-                                  ("melody_ioi_corr", float),
-                                  ("acc_ioi_corr", float),
-                                  ("ratio_ioi_corr", float),
+    ref_perf: Union[PerformedPart, Performance],
+    pred_perf: Union[PerformedPart, Performance]
+) -> np.ndarray:
 
-                                  ("melody_ioi_dtw_dist", float),
-                                  ("acc_ioi_dtw_dist", float),
-
-                                  ("melody_ioi_hist_kld", float),
-                                  ("acc_ioi_hist_kld", float),
-                              ],
-                              )
+    timing_metrics = np.zeros(
+        1,
+        dtype=[
+            ("melody_ioi_corr", float),
+            ("acc_ioi_corr", float),
+            ("ratio_ioi_corr", float),
+            ("melody_ioi_dtw_dist", float),
+            ("acc_ioi_dtw_dist", float),
+            ("melody_ioi_hist_kld", float),
+            ("acc_ioi_hist_kld", float),
+        ],
+    )
     
 
-    ############################
-    # compute IOI sequence
-    ############################
-    # get melody and accompaniment for gt performance
-    gt_note_array = gt_perf.note_array()
-    melody, accompaniment = skyline_melody_identification_from_array(gt_note_array)
-    # get melody and accompaniment onsets for interpolation
-    melody_onsets = np.unique(melody['onset_sec'])
-    accompaniment_onsets = np.unique(accompaniment['onset_sec'])
-    
-    # get interpolation function for melody and accompaniment
-    ioi_melody_func = get_ioi_stream_func(melody)
-    ioi_accompaniment_func = get_ioi_stream_func(accompaniment)
-    
-    # get interpolated IOIs for melody and accompaniment
-    melody_ioi_gt = ioi_melody_func(melody_onsets)
-    accompaniment_ioi_gt = ioi_accompaniment_func(accompaniment_onsets)
-    
-    # get melody and accompaniment from prediction
+    # Get melody and accompaniment IOIs for reference performance
+    ref_note_array = ref_perf.note_array()
+    ref_melody, ref_acc = skyline_melody_identification_from_array(ref_note_array)
+    ref_melody_onsets = np.unique(ref_melody["onset_sec"])
+    ref_acc_onsets = np.unique(ref_acc["onset_sec"])
+
+    ref_melody_ioi_func = get_ioi_stream_func(ref_melody)
+    ref_acc_ioi_func = get_ioi_stream_func(ref_acc)
+
+    ref_melody_ioi = ref_melody_ioi_func(ref_melody_onsets)
+    ref_acc_ioi = ref_acc_ioi_func(ref_acc_onsets)
+
+    # Get melody and accompaniment IOIs for predicted performance
     pred_note_array = pred_perf.note_array()
-    melody_pred, accompaniment_pred = skyline_melody_identification_from_array(pred_note_array)
-    # get interpolation function for predicted melody and accompaniment
-    ioi_melody_pred_func = get_ioi_stream_func(melody_pred)
-    ioi_accompaniment_pred_func = get_ioi_stream_func(accompaniment_pred)
-    # get interpolated IOIs for predicted melody and accompaniment
-    melody_ioi_pred = ioi_melody_pred_func(melody_onsets)
-    accompaniment_ioi_pred = ioi_accompaniment_pred_func(accompaniment_onsets)
+    pred_melody, pred_acc = skyline_melody_identification_from_array(pred_note_array)
     
+    pred_melody_ioi_func = get_ioi_stream_func(pred_melody)
+    pred_acc_ioi_func = get_ioi_stream_func(pred_acc)
+    # Get interpolated IOIs for predicted melody and accompaniment
+    pred_melody_ioi = pred_melody_ioi_func(ref_melody_onsets)
+    pred_acc_ioi = pred_acc_ioi_func(ref_acc_onsets)
+
     ############################
     # Correlations
     ############################
     # calculate correlation between IOIs
-    corr_melody_ioi = np.corrcoef(melody_ioi_gt, melody_ioi_pred)[0, 1]
-    corr_accompaniment_ioi = np.corrcoef(accompaniment_ioi_gt, accompaniment_ioi_pred)[0, 1]
-    
-    timing_metrics['melody_ioi_corr'] = corr_melody_ioi
-    timing_metrics['acc_ioi_corr'] = corr_accompaniment_ioi
-    
+    corr_melody_ioi = np.corrcoef(ref_melody_ioi, pred_melody_ioi)[0, 1]
+    corr_accompaniment_ioi = np.corrcoef(ref_acc_ioi, pred_acc_ioi)[
+        0, 1
+    ]
+
+    timing_metrics["melody_ioi_corr"] = corr_melody_ioi
+    timing_metrics["acc_ioi_corr"] = corr_accompaniment_ioi
+
     ############################
     # DTW distances
     ############################
-    
+
     # create piano rolls for gt and pred melody and accompaniment note arrays
-    melody_gt_pr = pt.utils.music.compute_pianoroll(
-        note_info=melody,
+    ref_melody_pr = pt.utils.music.compute_pianoroll(
+        note_info=ref_melody,
         time_unit="sec",
         time_div=8,
         return_idxs=False,
@@ -117,8 +112,8 @@ def timing_metrics_from_perf(
         binary=True,
         note_separation=True,
     )
-    accompaniment_gt_pr = pt.utils.music.compute_pianoroll(
-        note_info=accompaniment,
+    ref_acc_pr = pt.utils.music.compute_pianoroll(
+        note_info=ref_acc,
         time_unit="sec",
         time_div=8,
         return_idxs=False,
@@ -126,11 +121,11 @@ def timing_metrics_from_perf(
         binary=True,
         note_separation=True,
     )
-    melody_gt_features = melody_gt_pr.toarray().T
-    accompaniment_gt_features = accompaniment_gt_pr.toarray().T
-    
-    melody_pred_pr = pt.utils.music.compute_pianoroll(
-        note_info=melody_pred,
+    ref_melody_features = ref_melody_pr.toarray().T
+    ref_acc_features = ref_acc_pr.toarray().T
+
+    pred_melody_pr = pt.utils.music.compute_pianoroll(
+        note_info=pred_melody,
         time_unit="sec",
         time_div=8,
         return_idxs=False,
@@ -138,8 +133,8 @@ def timing_metrics_from_perf(
         binary=True,
         note_separation=True,
     )
-    accompaniment_pred_pr = pt.utils.music.compute_pianoroll(
-        note_info=accompaniment_pred,
+    pred_acc_pr = pt.utils.music.compute_pianoroll(
+        note_info=pred_acc,
         time_unit="sec",
         time_div=8,
         return_idxs=False,
@@ -147,42 +142,53 @@ def timing_metrics_from_perf(
         binary=True,
         note_separation=True,
     )
-    melody_pred_features = melody_pred_pr.toarray().T
-    accompaniment_pred_features = accompaniment_pred_pr.toarray().T
-    
-    _, dtw_melody_distance = fast_dynamic_time_warping(
-        melody_gt_features, melody_pred_features, metric="cityblock", return_distance=True)
-    _, dtw_acc_distance = fast_dynamic_time_warping(
-        accompaniment_gt_features, accompaniment_pred_features, metric="cityblock", return_distance=True)
-    
-    timing_metrics['melody_ioi_dtw_dist'] = dtw_melody_distance
-    timing_metrics['acc_ioi_dtw_dist'] = dtw_acc_distance
-    
+    pred_melody_features = pred_melody_pr.toarray().T
+    pred_acc_features = pred_acc_pr.toarray().T
+
+    _, melody_dtw_distance = fast_dynamic_time_warping(
+        ref_melody_features,
+        pred_melody_features,
+        metric="cityblock",
+        return_distance=True,
+    )
+    _, acc_dtw_distance = fast_dynamic_time_warping(
+        ref_acc_features,
+        pred_acc_features,
+        metric="cityblock",
+        return_distance=True,
+    )
+
+    timing_metrics["melody_ioi_dtw_dist"] = melody_dtw_distance
+    timing_metrics["acc_ioi_dtw_dist"] = acc_dtw_distance
+
     ############################
     # Histogram distance (symmetric KLD)
     ############################
-    
+
     # compute histograms for melody and accompaniment IOIs
     # bin size = 10ms for IOIs below 100ms and 100ms from 100ms to 2s
-    bins = [i*0.01 for i in range(10)]
-    bins += [0.1+i*0.1 for i in range(20)]
-    melody_hist_gt = np.histogram(melody_ioi_gt, bins=bins, density=True)[0]
-    melody_hist_pred = np.histogram(melody_ioi_pred, bins=bins, density=True)[0]
-    acc_hist_gt = np.histogram(accompaniment_ioi_gt, bins=bins, density=True)[0]
-    acc_hist_pred = np.histogram(accompaniment_ioi_pred, bins=bins, density=True)[0]
-    
-    melody_hist_gt[melody_hist_gt == 0] = 1e-6
-    melody_hist_pred[melody_hist_pred == 0] = 1e-6
-    acc_hist_gt[acc_hist_gt == 0] = 1e-6
-    acc_hist_pred[acc_hist_pred == 0] = 1e-6
-    
+    bins = [i * 0.01 for i in range(10)]
+    bins += [0.1 + i * 0.1 for i in range(20)]
+    ref_melody_hist = np.histogram(ref_melody_ioi, bins=bins, density=True)[0]
+    pred_melody_hist = np.histogram(pred_melody_ioi, bins=bins, density=True)[0]
+    ref_acc_hist = np.histogram(ref_acc_ioi, bins=bins, density=True)[0]
+    pred_acc_hist = np.histogram(pred_acc_ioi, bins=bins, density=True)[0]
+
+    ref_melody_hist[ref_melody_hist == 0] = 1e-6
+    pred_melody_hist[pred_melody_hist == 0] = 1e-6
+    ref_acc_hist[ref_acc_hist == 0] = 1e-6
+    pred_acc_hist[pred_acc_hist == 0] = 1e-6
+
     # compute the symmetric KLD between the two
-    melody_kld = 0.5 * (entropy(melody_hist_gt, melody_hist_pred) +
-                        entropy(melody_hist_pred, melody_hist_gt))
-    acc_kld = 0.5 * (entropy(acc_hist_gt, acc_hist_pred) +
-                     entropy(acc_hist_pred, acc_hist_gt))
-    
-    timing_metrics['melody_ioi_hist_kld'] = melody_kld
-    timing_metrics['acc_ioi_hist_kld'] = acc_kld
-    
+    melody_kld = 0.5 * (
+        entropy(ref_melody_hist, pred_melody_hist)
+        + entropy(pred_melody_hist, ref_melody_hist)
+    )
+    acc_kld = 0.5 * (
+        entropy(ref_acc_hist, pred_acc_hist) + entropy(pred_acc_hist, ref_acc_hist)
+    )
+
+    timing_metrics["melody_ioi_hist_kld"] = melody_kld
+    timing_metrics["acc_ioi_hist_kld"] = acc_kld
+
     return timing_metrics
