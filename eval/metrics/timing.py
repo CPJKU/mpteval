@@ -47,7 +47,7 @@ def get_ioi_stream_func(note_array: np.ndarray) -> Callable[[np.ndarray], np.nda
 
 def timing_metrics_from_perf(
     ref_perf: Union[PerformedPart, Performance],
-    pred_perf: Union[PerformedPart, Performance]
+    pred_perf: Union[PerformedPart, Performance],
 ) -> np.ndarray:
 
     timing_metrics = np.zeros(
@@ -62,7 +62,6 @@ def timing_metrics_from_perf(
             ("acc_ioi_hist_kld", float),
         ],
     )
-    
 
     # Get melody and accompaniment IOIs for reference performance
     ref_note_array = ref_perf.note_array()
@@ -79,7 +78,7 @@ def timing_metrics_from_perf(
     # Get melody and accompaniment IOIs for predicted performance
     pred_note_array = pred_perf.note_array()
     pred_melody, pred_acc = skyline_melody_identification_from_array(pred_note_array)
-    
+
     pred_melody_ioi_func = get_ioi_stream_func(pred_melody)
     pred_acc_ioi_func = get_ioi_stream_func(pred_acc)
     # Get interpolated IOIs for predicted melody and accompaniment
@@ -91,9 +90,7 @@ def timing_metrics_from_perf(
     ############################
     # calculate correlation between IOIs
     corr_melody_ioi = np.corrcoef(ref_melody_ioi, pred_melody_ioi)[0, 1]
-    corr_accompaniment_ioi = np.corrcoef(ref_acc_ioi, pred_acc_ioi)[
-        0, 1
-    ]
+    corr_accompaniment_ioi = np.corrcoef(ref_acc_ioi, pred_acc_ioi)[0, 1]
 
     timing_metrics["melody_ioi_corr"] = corr_melody_ioi
     timing_metrics["acc_ioi_corr"] = corr_accompaniment_ioi

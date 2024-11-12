@@ -6,6 +6,7 @@ from mir_eval import transcription as mir_eval_transcription
 from mir_eval import transcription_velocity as mir_eval_transcription_velocity
 
 import warnings
+
 warnings.filterwarnings("ignore", module="partitura")
 
 PERF_PIANO_ROLL_PARAMS = {
@@ -20,6 +21,7 @@ PERF_PIANO_ROLL_PARAMS = {
 ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL = (
     5 if PERF_PIANO_ROLL_PARAMS["time_div"] == 100 else 50
 )
+
 
 def plot_piano_roll(piano_roll, params_dict=PERF_PIANO_ROLL_PARAMS, out_path=None):
     import matplotlib.pyplot as plt
@@ -125,7 +127,9 @@ def ir_metrics_notewise(ref_notelist, pred_notelist, onset_only=False, verbose=F
 
     # check if we have zero or negative duration notes in the ground truth or prediction
     if np.any(ref_notelist[:, 1] <= ref_notelist[:, 0]):
-        zero_negative_durations_idxs = np.where(ref_notelist[:, 1] <= ref_notelist[:, 0])[0]
+        zero_negative_durations_idxs = np.where(
+            ref_notelist[:, 1] <= ref_notelist[:, 0]
+        )[0]
         ref_notelist = np.delete(ref_notelist, zero_negative_durations_idxs, axis=0)
 
     if np.any(pred_notelist[:, 1] <= pred_notelist[:, 0]):
@@ -133,24 +137,26 @@ def ir_metrics_notewise(ref_notelist, pred_notelist, onset_only=False, verbose=F
             pred_notelist[:, 1] <= pred_notelist[:, 0]
         )[0]
         pred_notelist = np.delete(pred_notelist, zero_negative_durations_idxs, axis=0)
-    
+
     offset_ratio = None if onset_only else 0.2
-    precision, recall, f_score, average_overlap_ratio = (
-            mir_eval_transcription.precision_recall_f1_overlap(
-                ref_intervals=ref_notelist[:, :2],
-                ref_pitches=ref_notelist[:, 2],
-                est_intervals=pred_notelist[:, :2],
-                est_pitches=pred_notelist[:, 2],
-                onset_tolerance=ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL,
-                pitch_tolerance=0,
-                offset_ratio=offset_ratio,
-                offset_min_tolerance=ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL,
-                # beta : float, optional, how much more importance should be placed on recall than precision (1.0 means recall is as important as precision, 2.0 means recall is twice as important as precision, etc.)
-                beta=1.0,
-                strict=False,
-        )
+    (
+        precision,
+        recall,
+        f_score,
+        average_overlap_ratio,
+    ) = mir_eval_transcription.precision_recall_f1_overlap(
+        ref_intervals=ref_notelist[:, :2],
+        ref_pitches=ref_notelist[:, 2],
+        est_intervals=pred_notelist[:, :2],
+        est_pitches=pred_notelist[:, 2],
+        onset_tolerance=ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL,
+        pitch_tolerance=0,
+        offset_ratio=offset_ratio,
+        offset_min_tolerance=ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL,
+        # beta : float, optional, how much more importance should be placed on recall than precision (1.0 means recall is as important as precision, 2.0 means recall is twice as important as precision, etc.)
+        beta=1.0,
+        strict=False,
     )
-       
 
     if verbose:
         print(42 * "-")
@@ -176,33 +182,37 @@ def ir_metrics_notewise_with_velocity(ref_notelist, pred_notelist, verbose=False
 
     # check if we have zero or negative duration notes in the ground truth or prediction
     if np.any(ref_notelist[:, 1] <= ref_notelist[:, 0]):
-        zero_negative_durations_idxs = np.where(ref_notelist[:, 1] <= ref_notelist[:, 0])[0]
-        ref_notelist = np.delete(
-            ref_notelist, zero_negative_durations_idxs, axis=0)
+        zero_negative_durations_idxs = np.where(
+            ref_notelist[:, 1] <= ref_notelist[:, 0]
+        )[0]
+        ref_notelist = np.delete(ref_notelist, zero_negative_durations_idxs, axis=0)
 
     if np.any(pred_notelist[:, 1] <= pred_notelist[:, 0]):
         zero_negative_durations_idxs = np.where(
-            pred_notelist[:, 1] <= pred_notelist[:, 0])[0]
-        pred_notelist = np.delete(
-            pred_notelist, zero_negative_durations_idxs, axis=0)
+            pred_notelist[:, 1] <= pred_notelist[:, 0]
+        )[0]
+        pred_notelist = np.delete(pred_notelist, zero_negative_durations_idxs, axis=0)
 
-    precision, recall, f_score, average_overlap_ratio = (
-        mir_eval_transcription_velocity.precision_recall_f1_overlap(
-            ref_intervals=ref_notelist[:, :2],
-            ref_pitches=ref_notelist[:, 2],
-            ref_velocities=ref_notelist[:, 3],
-            est_intervals=pred_notelist[:, :2],
-            est_pitches=pred_notelist[:, 2],
-            est_velocities=pred_notelist[:, 3],
-            onset_tolerance=ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL,
-            pitch_tolerance=0,
-            offset_ratio=0.2,
-            offset_min_tolerance=ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL,
-            # beta : float, optional, how much more importance should be placed on recall than precision (1.0 means recall is as important as precision, 2.0 means recall is twice as important as precision, etc.)
-            velocity_tolerance=0.1,
-            beta=1.0,
-            strict=False,
-        )
+    (
+        precision,
+        recall,
+        f_score,
+        average_overlap_ratio,
+    ) = mir_eval_transcription_velocity.precision_recall_f1_overlap(
+        ref_intervals=ref_notelist[:, :2],
+        ref_pitches=ref_notelist[:, 2],
+        ref_velocities=ref_notelist[:, 3],
+        est_intervals=pred_notelist[:, :2],
+        est_pitches=pred_notelist[:, 2],
+        est_velocities=pred_notelist[:, 3],
+        onset_tolerance=ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL,
+        pitch_tolerance=0,
+        offset_ratio=0.2,
+        offset_min_tolerance=ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL,
+        # beta : float, optional, how much more importance should be placed on recall than precision (1.0 means recall is as important as precision, 2.0 means recall is twice as important as precision, etc.)
+        velocity_tolerance=0.1,
+        beta=1.0,
+        strict=False,
     )
 
     if verbose:

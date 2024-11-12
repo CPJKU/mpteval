@@ -45,7 +45,7 @@ class PerformedChord(object):
     @property
     def onset_dur(self) -> float:
         return self.onset_end - self.onset_start
-    
+
     @property
     def onset_mean(self) -> float:
         return np.mean(self.ponsets)
@@ -279,7 +279,7 @@ def dynamics_metrics_from_perf(
     ref_perf: Union[PerformedPart, Performance],
     pred_perf: Union[PerformedPart, Performance],
     use_true_note_offs: bool = True,
-    r_b: float = 44.0
+    r_b: float = 44.0,
 ) -> float:
 
     # Use true note offs
@@ -290,7 +290,7 @@ def dynamics_metrics_from_perf(
 
         for ppart in pred_perf:
             ppart.sustain_pedal_threshold = 127
-    
+
     # Create reference and predicted note arrays and compute dynamic range functions
     ref_note_array = ref_perf.note_array()
     pred_note_array = pred_perf.note_array()
@@ -304,7 +304,7 @@ def dynamics_metrics_from_perf(
         note_array=pred_note_array,
         r_b=r_b,
     )
-    
+
     # Compute correlation between reference and predicted dynamic range functions
     corr = np.corrcoef(
         ref_dynamic_range_func(ref_note_array["onset_sec"]),
