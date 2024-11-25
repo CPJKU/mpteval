@@ -15,8 +15,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
+
 def get_tonal_tension_feature_func(
-    note_array: np.ndarray, feature: str, ws: int, ss: int
+    note_array: np.ndarray, feature: str, ws: int, ss: int, return_onsets: bool = False
 ) -> Tuple[np.ndarray, Callable[[np.ndarray], np.ndarray]]:
     """
     Compute a tonal tension feature and return the interpolation function for that feature.
@@ -46,6 +47,7 @@ def get_tonal_tension_feature_func(
            (TENOR), Cambridge, UK.
     """
 
+
     tonal_tension = estimate_tonaltension(note_array, ws, ss)
 
     feat_func = interp1d(
@@ -57,15 +59,26 @@ def get_tonal_tension_feature_func(
         fill_value=-1,
     )
 
-    return tonal_tension[feature], feat_func
+    if return_onsets:
+        return tonal_tension["onset_sec"], tonal_tension[feature], feat_func
+    else:
+        return tonal_tension[feature], feat_func
 
 
 def harmony_metrics_from_perf(
-    ref_perf: Union[PerformedPart, Performance],
-    pred_perf: Union[PerformedPart, Performance],
-    ws: int = 5,
-    ss: int = 1,
+    ref_perf: PerformedPart,
+    pred_perf: PerformedPart,
+    ws=5,
+    ss=1,
 ) -> np.ndarray:
+    """
+    Compute the correlation between the tonal tension of the ground truth and predicted performances.
+
+    Specifically, we compute the correlation between the following measures of tonal tension:
+    - cloud diameter
+    - cloud momentum
+    - tensile strain
+    """
 
     harmony_metrics = np.zeros(
         1,
@@ -76,25 +89,31 @@ def harmony_metrics_from_perf(
         ],
     )
 
-    # get melody and accompaniment for reference performance
+    # get melody and accompaniment for gt performance
     ref_note_array = ref_perf.note_array()
     ref_onsets = np.unique(ref_note_array["onset_sec"])
 
     # get tonal tension func and interpolation function
-    ref_cd, _ = get_tonal_tension_feature_func(ref_note_array, "cloud_diameter", ws, ss)
-    ref_cm, _ = get_tonal_tension_feature_func(ref_note_array, "cloud_momentum", ws, ss)
-    ref_ts, _ = get_tonal_tension_feature_func(ref_note_array, "tensile_strain", ws, ss)
+    ref_onsets, ref_cd, cd_func = get_tonal_tension_feature_func(
+        ref_note_array, "cloud_diameter", ws, ss, return_onsets=True
+    )
+    ref_cm, cm_func = get_tonal_tension_feature_func(
+        ref_note_array, "cloud_momentum", ws, ss
+    )
+    ref_ts, ts_func = get_tonal_tension_feature_func(
+        ref_note_array, "tensile_strain", ws, ss
+    )
 
     # get tonal tension and interp func for prediction
     pred_note_array = pred_perf.note_array()
 
-    _, pred_cd_func = get_tonal_tension_feature_func(
+    pred_cd, pred_cd_func = get_tonal_tension_feature_func(
         pred_note_array, "cloud_diameter", ws, ss
     )
-    _, pred_cm_func = get_tonal_tension_feature_func(
+    pred_cm, pred_cm_func = get_tonal_tension_feature_func(
         pred_note_array, "cloud_momentum", ws, ss
     )
-    _, pred_ts_func = get_tonal_tension_feature_func(
+    pred_ts, pred_ts_func = get_tonal_tension_feature_func(
         pred_note_array, "tensile_strain", ws, ss
     )
     pred_cd = pred_cd_func(ref_onsets)
