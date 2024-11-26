@@ -272,7 +272,7 @@ def get_upper_lower_stream_dynamic_range(
         fill_value=-r_b,
     )
 
-    return dynamic_range_func, upper_voice_vel_func, lower_voice_vel_func
+    return dynamic_range_func, upper_voice_vel_func, lower_voice_vel_func, upper_voice, lower_voice
 
 
 def dynamics_metrics_from_perf(
@@ -295,12 +295,12 @@ def dynamics_metrics_from_perf(
     ref_note_array = ref_perf.note_array()
     pred_note_array = pred_perf.note_array()
 
-    ref_dynamic_range_func, _, _ = get_upper_lower_stream_dynamic_range(
+    ref_dynamic_range_func, *_ = get_upper_lower_stream_dynamic_range(
         note_array=ref_note_array,
         r_b=r_b,
     )
 
-    pred_dynamic_range_func, _, _ = get_upper_lower_stream_dynamic_range(
+    pred_dynamic_range_func, *_ = get_upper_lower_stream_dynamic_range(
         note_array=pred_note_array,
         r_b=r_b,
     )
