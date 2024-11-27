@@ -13,9 +13,8 @@ import partitura as pt
 from partitura.utils.generic import interp1d
 from partitura.performance import PerformedPart, Performance
 
-from helpers.dtw import fast_dynamic_time_warping
-from eval.metrics.articulation import skyline_melody_identification_from_array
-
+from .articulation import skyline_melody_identification_from_array
+from .util import fast_dynamic_time_warping
 
 def compute_ioi_stream(note_array: np.ndarray) -> np.ndarray:
 
