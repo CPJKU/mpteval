@@ -168,6 +168,8 @@ def get_upper_lower_stream_dynamic_range(
     Callable[[np.ndarray], np.ndarray],
     Callable[[np.ndarray], np.ndarray],
     Callable[[np.ndarray], np.ndarray],
+    np.ndarray,
+    np.ndarray,
 ]:
 
     sort_idx = note_array["onset_sec"].argsort()
