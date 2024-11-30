@@ -5,6 +5,7 @@ Note that these metrics are a work in progress and actively being developed/refi
 # Metrics computation
 The following code loads a reference and a predicted MIDI and computes how well the transcription preserves timing information in the performance:
 ```
+import mpteval
 from mpteval.timing import timing_metrics_from_perf
 import partitura as pt
 
@@ -22,8 +23,7 @@ pip install mpteval
 
 ## Dependencies
 - Python 3.9
-- Partitura 1.6.0*
-* Note that currently only Partitura 1.5.0 is out (we're working on the next release! In the meantime, you can install the relevant branch from partitura using: `!pip install git+https://github.com/CPJKU/partitura.git@performance_pedal_fix`)
+- Partitura 1.6.0* (*Note* that currently only Partitura 1.5.0 is out (we're working on the next release! In the meantime, you can install the relevant branch from partitura using: `!pip install git+https://github.com/CPJKU/partitura.git@performance_pedal_fix`))
 
 
 # Citing
