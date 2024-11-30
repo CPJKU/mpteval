@@ -1,34 +1,33 @@
 # Towards Musically Informed Evaluation of Piano Transcription Models
-Piano transcription models are typically evaluted using information-retrieval metrics precision, recall and F1 score. In this project we propose a set of musically informed metrics to capture more nuanced transcription errors for expressive performance dimensions such as timing, articulation, harmony and dynamics.
- 
-# Requirements
-- Python 3.9
-- conda
-
-# Setup
-- Clone the repo and create the conda environment using the provided [`mpteval.yml`](mpteval.yml) environment file.
-- Download the evaluation data [here](https://zenodo.org/records/12731999) and move it to `data/maestro_subset` and `data/revnoise`
+This repository provides a set of evaluation metrics designed for piano transcription evaluation. The metrics are musically informed, meaning they take into account the nuances of musical performance, such as dynamics, note onset, and duration, to offer more differentiated and musically relevant assessments of transcription quality.
+Note that these metrics are a work in progress and actively being developed/refined/extended. Expect future updates, and feel free to contribute or share feedback!
 
 # Metrics computation
-- To analyse the results, see [`notebooks/metrics_demonstration.ipynb`](notebooks/metrics_demonstration.ipynb)
-- If you want to compute the metrics from scratch, run `python main.py`. By default, this will compute *all* metrics (apart from `peamt`, see below) for the `maestro_subset` subset. You can use the `--subset` flag to choose another subset, and the `--eval_metric` flag to choose the metric you want to compute. The results will be stored in the `results` directory, as `[subset_]<metric>_<datetimestamp>.csv` (where `subset` is optional, e.g. only explicitely specified for `revnoise`)
-
-
-## `peamt` metric computation
-To compute the `peamt` metric, run `git submodule init` followed by `git submodule update` to download the submodule contents into `eval/peamt` folder. Then create and activate the `peamt` environment using the following:
-```bash
-conda create -n peamt python=3.6
-conda activate peamt
-cd eval/peamt
-pip install . # you may ignore pip's dependency resolvers' possible complaints here
-pip install pandas tqdm # as well as here
+The following code loads a reference and a predicted MIDI and computes how well the transcription preserves timing information in the performance:
 ```
-Copy the script [`eval/compute_peamt.py`](eval/compute_peamt.py) into the `eval/peamt/` subdirectory (git doesn't allow non-empty submodule directory initialization) and navigate back to the main director using `cd ../..`. Compute the `peamt` metric by running `python eval/peamt/compute_peamt.py`. You can again use the `--subset` flag to choose which subset you wish to evaluate on.
+from mpteval.timing import timing_metrics_from_perf
+import partitura as pt
+
+ref_perf = pt.load_performance_midi(mpteval.REF_MID)
+pred_perf = pt.load_performance_midi(mpteval.PRED_MID)
+
+timing_metrics = timing_metrics_from_perf(ref_perf, pred_perf)
+```
+
+# Setup
+The easiest way to install the package is via:
+```
+pip install mpteval
+```
+
+## Dependencies
+- Python 3.9
+- Partitura 1.6.0*
+* Note that currently only Partitura 1.5.0 is out (we're working on the next release! In the meantime, you can install the relevant branch from partitura using: `!pip install git+https://github.com/CPJKU/partitura.git@performance_pedal_fix`)
 
 
 # Citing
-If you use our evaluation set and/or metrics in your research, please cite the relevant [paper](https://arxiv.org/abs/2406.08454):
-
+If you use our metrics in your research, please cite the relevant [paper](https://arxiv.org/abs/2406.08454):
 ```
 @inproceedings{hu2024towards,
     title = {{Towards Musically Informed Evaluation of Piano Transcription Models}},

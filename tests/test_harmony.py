@@ -26,11 +26,11 @@ EXPECTED_PRED  = {
 class TestHarmonyMetrics(unittest.TestCase):
 
     def setUp(self):
-        self.ref_pref = pt.load_performance_midi(REF_MID)
+        self.ref_perf = pt.load_performance_midi(REF_MID)
         self.pred_perf = pt.load_performance_midi(PRED_MID)
-        self.ref_note_array = self.ref_pref.note_array()
+        self.ref_note_array = self.ref_perf.note_array()
         self.pred_note_array = self.pred_perf.note_array()
-        self.harmony_metrics = harmony_metrics_from_perf(self.ref_pref, self.pred_perf)
+        self.harmony_metrics = harmony_metrics_from_perf(self.ref_perf, self.pred_perf)
 
     def test_get_tonal_tension_feature_func(self):
         cloud_diameter_vals, cloud_diameter_func = get_tonal_tension_feature_func(self.ref_note_array, 'cloud_diameter', ws=5, ss=1)       

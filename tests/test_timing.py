@@ -27,11 +27,11 @@ EXPECTED_PRED  = {
 class TestTimingMetrics(unittest.TestCase):
 
     def setUp(self):
-        self.ref_pref = pt.load_performance_midi(REF_MID)
+        self.ref_perf = pt.load_performance_midi(REF_MID)
         self.pred_perf = pt.load_performance_midi(PRED_MID)
-        self.ref_note_array = self.ref_pref.note_array()
+        self.ref_note_array = self.ref_perf.note_array()
         self.pred_note_array = self.pred_perf.note_array()
-        self.timing_metrics = timing_metrics_from_perf(self.ref_pref, self.pred_perf)
+        self.timing_metrics = timing_metrics_from_perf(self.ref_perf, self.pred_perf)
 
     def test_skyline_melody_identification_from_array(self):
         melody, accompaniment = skyline_melody_identification_from_array(self.ref_note_array)
