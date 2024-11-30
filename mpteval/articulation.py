@@ -194,8 +194,9 @@ def skyline_melody_identification(
         ]
 
         middle_idxs = np.array(
-            [int(np.where(note_array["id"] == nid)[0]) for nid in middle_ids], dtype=int
+            [int(np.where(note_array["id"] == nid)[0][0]) for nid in middle_ids], dtype=int
         )
+        
         max_note = note_array[upper_mask]
         min_note = note_array[lower_mask]
         middle_notes = note_array[middle_idxs]

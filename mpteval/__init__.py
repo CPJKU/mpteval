@@ -8,4 +8,4 @@ from . import harmony
 from . import timing
 from . import util
 
-__version__ = "0.1"
+__version__ = "0.1.0"
