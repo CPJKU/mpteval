@@ -1,5 +1,0 @@
-numpy==1.26.4, 
-scipy==1.12.0,
-partitura==1.6.0,
-matplotlib==3.7.0,
-fastdtw==0.3.4
