@@ -23,7 +23,7 @@ pip install mpteval
 
 ## Dependencies
 - Python 3.9
-- Partitura 1.6.0* (**Note** that currently only Partitura 1.5.0 is out (we're working on the next release! We've set the auto-install version of partitura to 1.5.0 in the meantime, to get the correct metrics please manually install the relevant branch from partitura using: `!pip install git+https://github.com/CPJKU/partitura.git@develop`))
+- Partitura 1.6.0* (**Note** that currently only Partitura 1.5.0 is out (we're working on the next release!).  In the meantime, for mpteval, we've set the auto-install version of partitura to 1.5.0. To get the correct metrics please manually install the relevant branch from partitura using: `!pip install git+https://github.com/CPJKU/partitura.git@develop`))
 
 
 # Citing
