@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mpteval"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+            "numpy==1.26.4", 
+            "scipy==1.12.0",
+            "partitura==1.5.0", # tmp, wait for partitura release 1.6.0
+            "matplotlib==3.7.0",
+            "fastdtw==0.3.4"
+]
+description = "Musically informed piano transcription metrics"
+readme = "README.md"
+authors = [
+  { name="Patricia Hu", email="patricia.hu@jku.at"},
+  { name="Lukáš Samuel Marták" },
+  { name="Carlos Cancino-Chacón" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.setuptools]
+packages = { find = { exclude = ["tests"] } }
+include-package-data = true
+[tool.setuptools.package-data]
+"mpteval" = ["assets/*"]
+
+[project.urls]
+Homepage = "https://github.com/CPJKU/mpteval"
+Issues = "https://github.com/CPJKU/mpteval/issues"

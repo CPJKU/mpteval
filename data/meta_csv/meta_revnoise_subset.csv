@@ -1,7 +1,0 @@
-composer,title,split,performer,audio_env,piece_id
-Bach,Fugue_bwv_848,train,MiyashitaM01M,disklavier,1
-Beethoven,Piano_Sonatas_21-1_no_repeat,train,Sladek02M,maestro,2
-Chopin,Scherzos_31,train,Jussow11M,disklavier,3
-Liszt,Transcendental_Etudes_11,test,Huang18M,maestro,4
-Rachmaninoff,Preludes_op_23_4,train,WuuE07M,disklavier,5
-Schubert,Piano_Sonatas_664-1,test,KabuliL10M,disklavier,6

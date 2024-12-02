@@ -1,3 +1,0 @@
-numpy
-pretty_midi==0.2.8
-mir_eval
