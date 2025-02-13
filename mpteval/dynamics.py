@@ -234,9 +234,11 @@ def get_upper_lower_stream_dynamic_range(
 
             lower_voice.append(min_note)
 
-    upper_voice = np.vstack(upper_voice).flatten()
+    empty_voice = np.array([], dtype=note_array.dtype)
 
-    lower_voice = np.vstack(lower_voice).flatten()
+    upper_voice = np.vstack(upper_voice).flatten() if upper_voice else empty_voice
+
+    lower_voice = np.vstack(lower_voice).flatten() if lower_voice else empty_voice
 
     upper_voice_vel_func = interp1d(
         x=upper_voice["onset_sec"],

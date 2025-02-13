@@ -211,11 +211,13 @@ def skyline_melody_identification(
         if len(middle_notes) > 0:
             middle_voices.append(middle_notes)
 
-    upper_voice = np.hstack(upper_voice).flatten()
+    empty_voice = np.array([], dtype=note_array.dtype)
 
-    lower_voice = np.hstack(lower_voice).flatten()
+    upper_voice = np.hstack(upper_voice).flatten() if upper_voice else empty_voice
 
-    middle_voices = np.hstack(middle_voices).flatten()
+    lower_voice = np.hstack(lower_voice).flatten() if lower_voice else empty_voice
+
+    middle_voices = np.hstack(middle_voices).flatten() if middle_voices else empty_voice
 
     return upper_voice, lower_voice, middle_voices
 
