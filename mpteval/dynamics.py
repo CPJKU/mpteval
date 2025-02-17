@@ -129,7 +129,6 @@ def midi_vel_to_rms(vel: np.ndarray, r_b: float = 44.0) -> np.ndarray:
 
     return rms
 
-
 def dynamic_range_in_db(
     vel1: np.ndarray,
     vel2: np.ndarray,
@@ -155,6 +154,30 @@ def dynamic_range_in_db(
     rms1 = midi_vel_to_rms(vel=vel1, r_b=r_b)
     rms2 = midi_vel_to_rms(vel=vel2, r_b=r_b)
     range_in_db = 20 * np.log10(rms1 / rms2)
+
+    return range_in_db
+
+
+def dynamic_range_monophonic(
+    vel: np.ndarray,
+    r_b: float = 44.0,
+) -> np.ndarray:
+    """
+    Compute the dynamic range for a monophonic MIDI velocity stream.
+
+    Parameters
+    ----------
+    vel : np.ndarray
+        A MIDI velocity curve (a MIDI velocity for each onset)
+
+    Returns
+    -------
+    range_in_db : np.ndarray
+        A curve with the dynamic range for each onset.
+    """
+
+    rms = midi_vel_to_rms(vel=vel, r_b=r_b)
+    range_in_db = 20 * np.log10(rms / np.min(rms))
 
     return range_in_db
 
@@ -217,66 +240,91 @@ def get_upper_lower_stream_dynamic_range(
 
     upper_voice = []
     lower_voice = []
+    
+    if len(chords) == len(note_array): # if the note array is monophonic
+        upper_voice = note_array
+        upper_voice_vel_func = interp1d(
+            x=upper_voice["onset_sec"],
+            y=upper_voice["velocity"],
+            dtype=float,
+            kind="previous",
+            bounds_error=False,
+            fill_value=1e-6,
+        )
+        vel_upper = upper_voice_vel_func(note_array["onset_sec"])
+        dynamic_range = dynamic_range_monophonic(
+            vel=vel_upper,
+            r_b=r_b,
+        )
+        dynamic_range_func = interp1d(
+            x=note_array["onset_sec"],
+            y=dynamic_range,
+            dtype=float,
+            kind="previous",
+            bounds_error=False,
+            fill_value=-r_b,
+        )
+        
+        return dynamic_range_func, upper_voice_vel_func, upper_voice
+        
+    else:
+    
+        threshold = 60
+        for chord in chords:
 
-    threshold = 60
-    for chord in chords:
+            max_pitch_idx = np.argmax(chord.pitch)
+            min_pitch_idx = np.argmin(chord.pitch)
 
-        max_pitch_idx = np.argmax(chord.pitch)
-        min_pitch_idx = np.argmin(chord.pitch)
+            max_note = note_array[np.where(note_array["id"] == chord.ids[max_pitch_idx])]
+            min_note = note_array[np.where(note_array["id"] == chord.ids[min_pitch_idx])]
 
-        max_note = note_array[np.where(note_array["id"] == chord.ids[max_pitch_idx])]
-        min_note = note_array[np.where(note_array["id"] == chord.ids[min_pitch_idx])]
+            if chord.pitch[max_pitch_idx] > threshold:
+                upper_voice.append(max_note)
 
-        if chord.pitch[max_pitch_idx] > threshold:
-            upper_voice.append(max_note)
+            if max_pitch_idx != min_pitch_idx:
+                lower_voice.append(min_note)
 
-        if max_pitch_idx != min_pitch_idx:
+        upper_voice = np.vstack(upper_voice).flatten()
 
-            lower_voice.append(min_note)
+        lower_voice = np.vstack(lower_voice).flatten()
+    
+        upper_voice_vel_func = interp1d(
+            x=upper_voice["onset_sec"],
+            y=upper_voice["velocity"],
+            dtype=float,
+            kind="previous",
+            bounds_error=False,
+            fill_value=1e-6,
+        )
 
-    empty_voice = np.array([], dtype=note_array.dtype)
+        lower_voice_vel_func = interp1d(
+            x=lower_voice["onset_sec"],
+            y=lower_voice["velocity"],
+            dtype=float,
+            kind="previous",
+            bounds_error=False,
+            fill_value=1e-6,
+        )
 
-    upper_voice = np.vstack(upper_voice).flatten() if upper_voice else empty_voice
+        vel_upper = upper_voice_vel_func(note_array["onset_sec"])
+        vel_lower = lower_voice_vel_func(note_array["onset_sec"])
 
-    lower_voice = np.vstack(lower_voice).flatten() if lower_voice else empty_voice
+        dynamic_range = dynamic_range_in_db(
+            vel1=vel_upper,
+            vel2=vel_lower,
+            r_b=r_b,
+        )
 
-    upper_voice_vel_func = interp1d(
-        x=upper_voice["onset_sec"],
-        y=upper_voice["velocity"],
-        dtype=float,
-        kind="previous",
-        bounds_error=False,
-        fill_value=1e-6,
-    )
+        dynamic_range_func = interp1d(
+            x=note_array["onset_sec"],
+            y=dynamic_range,
+            dtype=float,
+            kind="previous",
+            bounds_error=False,
+            fill_value=-r_b,
+        )
 
-    lower_voice_vel_func = interp1d(
-        x=lower_voice["onset_sec"],
-        y=lower_voice["velocity"],
-        dtype=float,
-        kind="previous",
-        bounds_error=False,
-        fill_value=1e-6,
-    )
-
-    vel_upper = upper_voice_vel_func(note_array["onset_sec"])
-    vel_lower = lower_voice_vel_func(note_array["onset_sec"])
-
-    dynamic_range = dynamic_range_in_db(
-        vel1=vel_upper,
-        vel2=vel_lower,
-        r_b=r_b,
-    )
-
-    dynamic_range_func = interp1d(
-        x=note_array["onset_sec"],
-        y=dynamic_range,
-        dtype=float,
-        kind="previous",
-        bounds_error=False,
-        fill_value=-r_b,
-    )
-
-    return dynamic_range_func, upper_voice_vel_func, lower_voice_vel_func, upper_voice, lower_voice
+        return dynamic_range_func, upper_voice_vel_func, lower_voice_vel_func, upper_voice, lower_voice
 
 
 def dynamics_metrics_from_perf(
