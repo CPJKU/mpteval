@@ -70,11 +70,13 @@ def timing_metrics_from_perf(
     ref_note_array = ref_perf.note_array()
     pred_note_array = pred_perf.note_array()
     
-    if (is_monophonic(ref_note_array) and not is_monophonic(pred_note_array)) or (not is_monophonic(ref_note_array) and is_monophonic(pred_note_array)):
-        # add an alignment step to make reference/prediction monotonic
-        raise NotImplementedError()
+    # if (is_monophonic(ref_note_array) and not is_monophonic(pred_note_array)) or (not is_monophonic(ref_note_array) and is_monophonic(pred_note_array)):
+    #     # add an alignment step to make reference/prediction monotonic
+    #     raise NotImplementedError()
     
-    elif is_monophonic(ref_note_array) and is_monophonic(pred_note_array):
+    # elif is_monophonic(ref_note_array) and is_monophonic(pred_note_array):
+    
+    if is_monophonic(ref_note_array) and is_monophonic(pred_note_array):
         
         warnings.warn("Prediction and reference are monophonic, metrics for non-melody stream fallback to nan")
         

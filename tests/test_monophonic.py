@@ -27,8 +27,6 @@ EXPECTED_PRED  = {
     "exptected_dynamics_metrics_from_perf" : 1.0, 
 }
 
-
-
 class TestMetricsMonophonic(unittest.TestCase):
 
     def setUp(self):
@@ -38,13 +36,16 @@ class TestMetricsMonophonic(unittest.TestCase):
     def test_timing_metrics_both_monophonic(self):
         timing_metrics = timing_metrics_from_perf(self.ref_perf, self.pred_perf)[0]
         exp_melody_corr = EXPECTED_PRED['exptected_timing_metrics_monophonic'][0]
-        self.assertEqual(timing_metrics[0], exp_melody_corr, f'Expected correlation {exp_melody_corr}, but got timing_metrics[0].')
-        self.assertTrue(np.isnan(timing_metrics[1]), f'Given monophonic input expected undefined (nan) return for accompaniment metric, but got {timing_metrics[1]}')
-        self.assertTrue(np.isnan(timing_metrics[2]), f'Given monophonic input expected undefined (nan) return for melody-accompaniment ratio metric, but got {timing_metrics[2]}')
+        self.assertAlmostEqual(timing_metrics[0], exp_melody_corr, msg=f'Expected correlation {exp_melody_corr}, but got timing_metrics[0].')
+        self.assertTrue(np.isnan(timing_metrics[1]), msg=f'Given monophonic input expected undefined (nan) return for accompaniment metric, but got {timing_metrics[1]}')
+        self.assertTrue(np.isnan(timing_metrics[2]), msg=f'Given monophonic input expected undefined (nan) return for melody-accompaniment ratio metric, but got {timing_metrics[2]}')
         
     def test_articulation_metrics_both_monophonic(self):
-        articulation_metrics = timing_metrics_from_perf(self.ref_perf, self.pred_perf)[0] # [0] = check for pedal threshold 64
+        articulation_metrics = articulation_metrics_from_perf(self.ref_perf, self.pred_perf)[0] # [0] = check for pedal threshold 64
         exp_melody_corr = EXPECTED_PRED['exptected_articulation_metrics_monophonic'][0]
-        self.assertEqual(articulation_metrics[0], exp_melody_corr, f'Expected correlation {exp_melody_corr}, but got timing_metrics[0].')
-        self.assertTrue(np.isnan(articulation_metrics[1]), f'Given monophonic input expected undefined (nan) return for accompaniment metric, but got {articulation_metrics[1]}')
-        self.assertTrue(np.isnan(articulation_metrics[2]), f'Given monophonic input expected undefined (nan) return for melody-accompaniment ratio metric, but got {articulation_metrics[2]}')
+        self.assertAlmostEqual(articulation_metrics[0], exp_melody_corr, msg=f'Expected correlation {exp_melody_corr}, but got timing_metrics[0].')
+        self.assertTrue(np.isnan(articulation_metrics[1]), msg=f'Given monophonic input expected undefined (nan) return for accompaniment metric, but got {articulation_metrics[1]}')
+        self.assertTrue(np.isnan(articulation_metrics[2]), msg=f'Given monophonic input expected undefined (nan) return for melody-accompaniment ratio metric, but got {articulation_metrics[2]}')
+        
+if __name__ == '__main__':
+    unittest.main()

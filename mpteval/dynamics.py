@@ -334,14 +334,17 @@ def dynamics_metrics_from_perf(
     r_b: float = 44.0,
 ) -> float:
 
+     # check correct types
+    if isinstance(ref_perf, Performance):
+        ref_perf = ref_perf.performedparts[0]
+    
+    if isinstance(pred_perf, Performance):
+        pred_perf = pred_perf.performedparts[0]
+        
     # Use true note offs
     if use_true_note_offs:
-
-        for ppart in ref_perf:
-            ppart.sustain_pedal_threshold = 127
-
-        for ppart in pred_perf:
-            ppart.sustain_pedal_threshold = 127
+        ref_perf.sustain_pedal_threshold = 127
+        pred_perf.sustain_pedal_threshold = 127
 
     # Create reference and predicted note arrays and compute dynamic range functions
     ref_note_array = ref_perf.note_array()
