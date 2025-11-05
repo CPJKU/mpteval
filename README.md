@@ -3,7 +3,7 @@
 
 [![Latest Release](https://img.shields.io/github/v/release/cpjku/mpteval)](https://github.com/cpjku/mpteval/releases)
 [![PyPI Package](https://img.shields.io/pypi/v/mpteval)](https://pypi.org/project/mpteval/)
-[![DOI](https://zenodo.org/badge/DOI/13897703.svg)](https://doi.org/10.5281/zenodo.12731998)
+[![DOI](https://zenodo.org/badge/DOI/10.5281.svg)](https://doi.org/10.5281/zenodo.12731998)
 
 This repository provides a set of evaluation metrics designed for piano transcription evaluation. The metrics are musically informed, meaning they take into account the nuances of musical performance, such as dynamics, note onset, and duration, to offer more differentiated and musically relevant assessments of transcription quality.
 Note that these metrics are a work in progress and actively being developed/refined/extended. Expect future updates, and feel free to contribute or share feedback!
