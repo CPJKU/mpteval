@@ -10,7 +10,7 @@ from partitura.utils.music import get_time_units_from_note_array
 from partitura.performance import Performance, PerformedPart
 
 from .dynamics import PerformedChord
-from .util import is_monophonic
+from .utils import is_monophonic
 
 import warnings
 
