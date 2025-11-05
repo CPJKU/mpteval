@@ -5,6 +5,81 @@ from fastdtw import fastdtw
 from scipy.spatial import distance as sp_dist
 from scipy.spatial.distance import cdist
 
+PERF_PIANO_ROLL_PARAMS = {
+    "time_unit": "sec",
+    "time_div": 100,  # frames per time_unit, i.e. with time_div=100 each frame has 10ms resolution
+    "onset_only": False,
+    "piano_range": True,  # 88 x num_time_steps
+    "time_margin": 0,  # amount of padding before and after piano roll
+    "return_idxs": False,
+}
+
+ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL = (
+    5 if PERF_PIANO_ROLL_PARAMS["time_div"] == 100 else 50
+)
+
+def plot_piano_roll(piano_roll, params_dict=PERF_PIANO_ROLL_PARAMS, out_path=None):
+    import matplotlib.pyplot as plt
+
+    _, ax = plt.subplots(1, figsize=(8, 4))
+    ax.imshow(
+        piano_roll.toarray(),
+        origin="lower",
+        cmap="YlGnBu",  # cmap='gray'
+        interpolation="nearest",
+        aspect="auto",
+    )
+
+    if params_dict:
+        _, time_div = params_dict["time_unit"], params_dict["time_div"]
+        if time_div == 100:
+            ax.set_xlabel(f"Time (frame size = 10ms)")
+        if time_div == 1000:
+            ax.set_xlabel(f"Time (ms)")
+
+    ax.set_ylabel("Piano key")
+    if out_path:
+        plt.savefig(out_path)
+        print(f"Piano roll saved to {out_path}")
+    else:
+        plt.show()
+
+
+
+def create_note_list(note_array, remove_silence=True):
+
+    # for empty note arrays, when we cut predicted midis
+    if note_array.shape[0] == 0:
+        return np.array([])
+
+    first_onset = note_array["onset_sec"][0]
+
+    if remove_silence:
+        # remove silence notes
+        note_array_no_silence = note_array.copy()
+        note_array_no_silence.dtype.names = note_array.dtype.names
+        note_array_no_silence["onset_sec"] = (
+            note_array_no_silence["onset_sec"] - first_onset
+        )
+        note_array = note_array_no_silence.copy()
+
+    # 100 -> 10ms time resolution
+    time_div = PERF_PIANO_ROLL_PARAMS["time_div"]
+    idxs = np.argsort(note_array["onset_sec"])
+    onsets = np.round(note_array["onset_sec"] * time_div).astype(int)
+    offsets = np.round(
+        (note_array["onset_sec"] + note_array["duration_sec"]) * time_div
+    ).astype(int)
+
+    pitch = note_array["pitch"]
+    velocity = note_array["velocity"]
+    note_list = np.column_stack((onsets, offsets, pitch, velocity))
+    note_list = note_list[idxs.argsort()]
+
+    return note_list
+
+def is_monophonic(note_array: np.ndarray):
+    return np.unique(note_array['onset_sec']).shape[0] == note_array.shape[0]
 
 def pairwise_distance_matrix(
     X: np.ndarray,
