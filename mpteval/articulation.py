@@ -10,7 +10,9 @@ from partitura.utils.music import get_time_units_from_note_array
 from partitura.performance import Performance, PerformedPart
 
 from .dynamics import PerformedChord
+from .utils import is_monophonic
 
+import warnings
 
 def chordify_perf_note_array(
     note_array: np.ndarray,
@@ -211,11 +213,13 @@ def skyline_melody_identification(
         if len(middle_notes) > 0:
             middle_voices.append(middle_notes)
 
-    upper_voice = np.hstack(upper_voice).flatten()
+    empty_voice = np.array([], dtype=note_array.dtype)
 
-    lower_voice = np.hstack(lower_voice).flatten()
+    upper_voice = np.hstack(upper_voice).flatten() if upper_voice else empty_voice
 
-    middle_voices = np.hstack(middle_voices).flatten()
+    lower_voice = np.hstack(lower_voice).flatten() if lower_voice else empty_voice
+
+    middle_voices = np.hstack(middle_voices).flatten() if middle_voices else empty_voice
 
     return upper_voice, lower_voice, middle_voices
 
@@ -331,6 +335,7 @@ def articulation_metrics_from_perf(
         ],
     )
     for i, spt in enumerate(pedal_range):
+        
         metrics[i]["pedal_threshold"] = spt
 
         # adjust sustain pedal threshold
@@ -339,7 +344,13 @@ def articulation_metrics_from_perf(
 
         # get predicted note array and KOR functions, and values for melody and bass stream
         pred_note_array = pred_perf.note_array()
-
+        
+        # if (is_monophonic(ref_note_array) and not is_monophonic(pred_note_array)) or (not is_monophonic(ref_note_array) and is_monophonic(pred_note_array)):
+        #     # add an alignment step to make reference/prediction monotonic
+        #     raise NotImplementedError()
+    
+        # else:
+            
         pred_melody_kor_func, pred_bass_kor_func = get_kor_stream_funcs(pred_note_array)
 
         pred_melody_kor = pred_melody_kor_func(ref_onsets)
@@ -348,10 +359,8 @@ def articulation_metrics_from_perf(
 
         # compare reference and prediction
         corr_melody = np.corrcoef(ref_melody_kor, pred_melody_kor)[0, 1]
-
         corr_bass = np.corrcoef(ref_bass_kor, pred_bass_kor)[0, 1]
-
-        corr_ratio = np.corrcoef(ref_ratio_kor, pred_ratio_kor)[0, 1]
+        corr_ratio = np.nan if np.isnan(corr_bass) else np.corrcoef(ref_ratio_kor, pred_ratio_kor)[0, 1]
 
         metrics[i]["melody_kor_corr"] = corr_melody
         metrics[i]["bass_kor_corr"] = corr_bass

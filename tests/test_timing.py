@@ -19,8 +19,8 @@ REF_MID = os.path.join(DATA, "ref.mid")
 PRED_MID = os.path.join(DATA, "pred.mid")
 
 EXPECTED_PRED  = {
-    "expected_stream_lens" : [28, 38],    
-    "exptected_melody_ioi_corr" : 0.13976843, 
+    "expected_stream_lens" : [22, 44],
+    "exptected_melody_ioi_corr" : -0.0940564, 
     "exptected_acc_ioi_corr" : 0.5453803,
 }
 

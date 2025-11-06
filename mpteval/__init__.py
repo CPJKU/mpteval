@@ -2,12 +2,12 @@
 """Top-level module for mpteval"""
 import pkg_resources
 
-# Import all submodules (for each task)
 from . import articulation
 from . import dynamics
 from . import harmony
 from . import timing
-from . import util
+from . import benchmarks
+from . import utils
 
 __version__ = pkg_resources.get_distribution("mpteval").version
 

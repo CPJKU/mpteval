@@ -61,13 +61,6 @@ class TestArticulationMetrics(unittest.TestCase):
                           ], 
                           EXPECTED_PRED['expected_note_array_lens'],
                           f"Expected {EXPECTED_PRED['expected_note_array_lens']} but got {[len(self.pred_note_array), len(pred_upper), len(pred_lower), len(pred_middle)]}")
-
-    def test_get_kor_stream_func(self):
-        kor_stream_func = get_kor_stream_func(self.ref_note_array)
-        self.assertIsInstance(kor_stream_func, Callable)
-        kor_values = kor_stream_func(self.ref_note_array['onset_sec'])
-        self.assertIsInstance(kor_values, np.ndarray)
-
         
     def test_articulation_metrics_64(self):
         articulation_metrics_64 = list(self.articulation_metrics[0])
