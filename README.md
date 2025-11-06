@@ -1,7 +1,6 @@
 # Towards Musically Informed Evaluation of Piano Transcription Models
 [//]: # (<p align="center"> )
 
-[![Latest Release](https://img.shields.io/github/v/release/cpjku/mpteval)](https://github.com/cpjku/mpteval/releases)
 [![PyPI Package](https://img.shields.io/pypi/v/mpteval)](https://pypi.org/project/mpteval/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281.svg)](https://doi.org/10.5281/zenodo.12731998)
 
