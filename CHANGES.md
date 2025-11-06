@@ -11,7 +11,7 @@ This version introduces the following changes:
 - `mpteval.timing.timing_metrics_from_perf()` returns only correlation metrics for melody, accompaniment and their ratio, and takes as additional argument `include_distance` to specify whether to compute DTW or histogram distance metrics (defaults to None)
 
 ### Fixed
-- make timing, articulation and dynamics metrics robust to monophonic inputs. For time-related metrics, when both reference and prediction are monophonic, all but the "melody"-stream metrics fallback to nan.
+- made timing, articulation and dynamics metrics robust to monophonic reference and polyphonic prediction.
 
 This version was used to measure how variations and shifts in both sound characteristics and musical distribution impact the performance and robustness of several state-of-the-art piano transcription models, as described in [article in press](link).
 
