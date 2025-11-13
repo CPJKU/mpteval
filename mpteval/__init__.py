@@ -6,7 +6,7 @@ from . import articulation
 from . import dynamics
 from . import harmony
 from . import timing
-from . import benchmarks
+from . import objective
 from . import utils
 
 __version__ = pkg_resources.get_distribution("mpteval").version
