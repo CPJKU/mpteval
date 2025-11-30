@@ -4,14 +4,12 @@ with added onset+velocity (no offset) notewise metric variation option.
 '''
 
 import numpy as np
-import partitura as pt
 
 from scipy.sparse import csc_matrix, hstack
 from mir_eval import transcription as mir_eval_transcription
 from mir_eval import transcription_velocity as mir_eval_transcription_velocity
 
 from .config import ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL
-import warnings
 
 
 def compute_transcription_benchmark_framewise(
