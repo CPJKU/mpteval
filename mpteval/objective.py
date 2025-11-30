@@ -10,7 +10,7 @@ from scipy.sparse import csc_matrix, hstack
 from mir_eval import transcription as mir_eval_transcription
 from mir_eval import transcription_velocity as mir_eval_transcription_velocity
 
-from .utils import ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL
+from .config import ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL
 import warnings
 
 
