@@ -72,9 +72,9 @@ def process_pair_wrapper(pair, pid_to_chords_dict, dist_metric, out_dir, directi
         The directory path to save the predicted alignment as a .npy and the accumulated distance and distance matrices (once with, once without predicted alignment path).
     """
     
-    p1id, p2id = pair
-    p1 = pid_to_chords_dict[p1id]
-    p2 = pid_to_chords_dict[p2id]
+    p1id, p2id = pair    
+    p1 = pid_to_chords_dict[str(p1id)]
+    p2 = pid_to_chords_dict[str(p2id)]
     
     p1id, p2id, cost, align_len, p1_len, p2_len = align_chordified(p1, p2, dist_metric, out_dir, p1id, p2id,directional_weights)
     
