@@ -11,77 +11,9 @@ from partitura.performance import Performance, PerformedPart
 
 from .dynamics import PerformedChord
 from .utils import is_monophonic
+from .preprocess import chordify_perf_note_array
 
 import warnings
-
-def chordify_perf_note_array(
-    note_array: np.ndarray,
-    ioi_threshold: float = 0.03,
-    max_threshold: float = 0.05,
-) -> List[PerformedChord]:
-    """
-    Chordify a performance note array.
-
-    Parameters
-    ----------
-    note_array : np.ndarray
-        An input note array
-    ioi_threshold : float, optional
-        Maximal Inter-onset interval between notes in the chord,
-        in seconds, by default 0.03
-    max_threshold : float, optional
-        Maximal value between the onset time of the first
-        and last note in the chord, by default 0.05
-
-    Returns
-    -------
-    chords : List[PerformedChord]
-        List of performed chords.
-    """
-    sort_idx = note_array["onset_sec"].argsort()
-
-    note_array = note_array[sort_idx]
-
-    chords = [
-        PerformedChord(
-            pitch=[note_array[0]["pitch"]],
-            ponsets=[note_array[0]["onset_sec"]],
-            pduration=[note_array[0]["duration_sec"]],
-            velocities=[note_array[0]["velocity"]],
-            ids=[note_array[0]["id"]],
-            chord_id="c0",
-            max_threshold=max_threshold,
-            ioi_threshold=ioi_threshold,
-        )
-    ]
-
-    cid = 1
-    for note in note_array[1:]:
-
-        added_note = chords[-1].add(
-            pitch=note["pitch"],
-            onset=note["onset_sec"],
-            duration=note["duration_sec"],
-            velocity=note["velocity"],
-            nid=note["id"],
-        )
-
-        if not added_note:
-
-            chord = PerformedChord(
-                pitch=[note["pitch"]],
-                ponsets=[note["onset_sec"]],
-                pduration=[note["duration_sec"]],
-                velocities=[note["velocity"]],
-                ids=[note["id"]],
-                chord_id=f"c{cid}",
-                max_threshold=max_threshold,
-                ioi_threshold=ioi_threshold,
-            )
-            chords.append(chord)
-            cid += 1
-
-    return chords
 
 
 def skyline_melody_identification_from_array(

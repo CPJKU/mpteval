@@ -5,97 +5,12 @@ import numpy as np
 from typing import List, Tuple, Callable, Union
 
 import partitura as pt
+from partitura.utils.generic import interp1d
 from partitura.performance import PerformedPart, Performance
 
 import matplotlib.pyplot as plt
 
-from partitura.utils.generic import interp1d
-
-
-class PerformedChord(object):
-    def __init__(
-        self,
-        pitch: List[int],
-        ponsets: List[float],
-        pduration: List[float],
-        velocities: List[float],
-        ids: List[str],
-        chord_id: str,
-        max_threshold: float = 0.1,
-        ioi_threshold: float = 0.02,
-    ) -> None:
-
-        self.pitch = pitch
-        self.ponsets = ponsets
-        self.pduration = pduration
-        self.velocities = velocities
-        self.ids = ids
-        self.max_threshold = max_threshold
-        self.ioi_threshold = ioi_threshold
-        self.cid = chord_id
-
-    @property
-    def onset_start(self) -> float:
-        return np.min(self.ponsets)
-
-    @property
-    def onset_end(self) -> float:
-        return np.max(self.ponsets)
-
-    @property
-    def onset_dur(self) -> float:
-        return self.onset_end - self.onset_start
-
-    @property
-    def onset_mean(self) -> float:
-        return np.mean(self.ponsets)
-
-    def __len__(self) -> int:
-        return len(self.pitch)
-
-    def check(self):
-
-        onset_start_crit = all([onset >= self.onset_start for onset in self.ponsets])
-
-        return onset_start_crit
-
-    def add(self, pitch, onset, duration, velocity, nid) -> bool:
-
-        assert onset >= self.onset_start and onset >= self.onset_end
-
-        if (onset - self.onset_start) <= self.max_threshold and (
-            onset - self.onset_end
-        ) <= self.ioi_threshold:
-            self.pitch.append(pitch)
-            self.ponsets.append(onset)
-            self.pduration.append(duration)
-            self.velocities.append(velocity)
-            self.ids.append(nid)
-
-            return True
-
-        else:
-            return False
-
-    def __str__(self):
-        out_str = (
-            f"\nPerformedChord {self.cid}\n"
-            f"\tonset_start: {self.onset_start:.3f}"
-            f"\tonset_end: {self.onset_end:.3f}"
-            f"\tonset_duration: {self.onset_dur:.3f}\n"
-            "\tNotes:\n"
-        )
-
-        out_str += "\n".join(
-            [
-                f"\t\t{nid}, {p}, {on:.3f}, {dur:.3f}"
-                for nid, p, on, dur in zip(
-                    self.ids, self.pitch, self.ponsets, self.pduration
-                )
-            ]
-        )
-
-        return out_str
+from .preprocess import PerformedChord
 
 
 def midi_vel_to_rms(vel: np.ndarray, r_b: float = 44.0) -> np.ndarray:
