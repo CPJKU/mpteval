@@ -1,7 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-This module provides clustering functions, to group different transcriptions via their pairwise alignment cost into clusters associated to different structural realisations TODO.
+This module provides helper function to evalutae predicted clusters.
+
+The following lists the computed evaluation metrics:
+. adjusted_rand_index (ARI) 
+    - measures similarity of two grouping assignments
+    - range: [-0.5, 1.0], adjusted for chance (1 = perfect match, 0 = random match)        
+. adjusted_mutual_info_score (AMI)
+    - measures agreement of two grouping assignments
+    - range: [-inf, 1.0], adjusted for chance (1 = perfect match, 0 = random match)
+. homogeneity, completeness, V-Measure
+    - homogeneity [0,1]: refers to cluster homogeneity: all clusters contain only items from a single class
+    - completeness [0,1]: clusters are complete if they capture all items belong to one group (i.e., true groups are not split)
+    - v-measure [0,1]: harmonic mean between homogeneity and completeness
+. pairwise f1
+    - measures accuracy of grouping via f1 of all pairs of items and whether they're grouped correctly
 """
 
 import numpy as np
@@ -32,7 +46,7 @@ def groups_to_labels(true_groups, predicted_groups):
     pred_labels: [0 0 1 1 2 3 1]
 
     """
-    # Get all items from TRUE groups (use true groups as reference)
+    # get all items from TRUE groups (use true groups as reference)
     all_items = set()
     for group in true_groups.values():
         all_items.update(group)
@@ -41,7 +55,7 @@ def groups_to_labels(true_groups, predicted_groups):
     all_items = sorted(all_items)
     item_to_idx = {item: i for i, item in enumerate(all_items)}
 
-    # Create label arrays
+    # create label arrays
     n_items = len(all_items)
     true_labels = np.full(n_items, -1, dtype=int)
     pred_labels = np.full(n_items, -1, dtype=int)
@@ -126,13 +140,13 @@ def evaluate_clustering(true_groups, predicted_groups):
         . adjusted_rand_index (ARI):
             - measures similarity of two grouping assignments
             - symmetric and robust to label permutation
-            - Range: [-0.5, 1.0], adjusted for chance (1 = perfect match, 0 = random match)
+            - range: [-0.5, 1.0], adjusted for chance (1 = perfect match, 0 = random match)
             -> Use ARI when the ground truth clustering has large equal sized clusters
 
         . adjusted_mutual_info_score (AMI):
             - measures agreement of two grouping assignments
             - symmetric and robust to label permutation
-            - Range: [-inf, 1.0], adjusted for chance (1 = perfect match, 0 = random match)
+            - range: [-inf, 1.0], adjusted for chance (1 = perfect match, 0 = random match)
             -> Use AMI when the ground truth clustering is unbalanced and there exist small clusters
             ref: https://stats.stackexchange.com/questions/260487/adjusted-rand-index-vs-adjusted-mutual-information
 
