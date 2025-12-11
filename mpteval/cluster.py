@@ -173,7 +173,7 @@ def hierarchical_structural_clustering(
     return groups, Z, distance_matrix
 
 
-def plot_distance_matrix(items, distance_matrix, title, groups=None, out=None):
+def plot_distance_matrix(items, distance_matrix, title, groups=None, out=None, figsize=(12, 10)):
     """
     Visualize similarity feature matrix, with groups highlighted if groups are not None.
 
@@ -188,7 +188,7 @@ def plot_distance_matrix(items, distance_matrix, title, groups=None, out=None):
 
     """
 
-    plt.figure(figsize=(12, 10))
+    plt.figure(figsize=figsize)
 
     # reorder by groups if provided
     if groups:
@@ -197,10 +197,10 @@ def plot_distance_matrix(items, distance_matrix, title, groups=None, out=None):
             ordered_items.extend(group)
         # reorder matrix
         indices = [items.index(item) for item in ordered_items]
-        distance_matrix = distance_matrix[np.ix_(indices, indices)]
+        distance_matrix = distance_matrix[np.ix_(indices, indices)] # reorder rows and columns
         items = ordered_items
 
-    plt.imshow(distance_matrix, cmap="RdYlGn", aspect="auto")
+    plt.imshow(distance_matrix, cmap="RdYlGn_r", aspect="auto")
     plt.colorbar(label="Distance Matrix")
     plt.title(title)
 
@@ -219,3 +219,83 @@ def plot_distance_matrix(items, distance_matrix, title, groups=None, out=None):
     if isinstance(out, str) or isinstance(out, Path):
         plt.savefig(out, dpi=150)
         plt.close()
+
+def plot_n_dist_matrices(items_list, matrices, groups_dicts, titles, out=None):
+    """
+    Plot n distance matrices side by side with different group structures.
+
+    Parameters
+    ----------
+    items_list : list of lists
+        List of item lists (one per matrix)
+    matrices : list of np.ndarray
+        List of distance matrices
+    groups_dicts : list of dict
+        List of group dictionaries, e.g. [{'predicted': ...}, {'pseudo_labels': ...}, {'true': ...}]
+    titles : list of str
+        List of titles (one per matrix)
+
+    All lists must be equal in length.
+    """
+    
+    assert len(matrices) == len(items_list) == len(groups_dicts), \
+        "items_list, matrices, and groups_dicts must have same length"
+
+    n = len(matrices)
+
+    
+    fig, axes = plt.subplots(1, n, figsize=(8 * n + 1, 8), constrained_layout=True)
+    if n == 1:
+        axes = [axes]
+
+    for i, (ax, items, matrix, groups_dict, title) in enumerate(
+        zip(axes, items_list, matrices, groups_dicts, titles)
+    ):
+        # If there is no grouping for this matrix, fall back to original order
+        if groups_dict:
+            # Use exactly one group structure per subplot:
+            # take the first (key, value) pair in this dict
+            group_title, group_dict = next(iter(groups_dict.items()))
+
+            # Flatten groups into an ordered item list
+            ordered_items = []
+            for group in group_dict.values():
+                ordered_items.extend(group)
+
+            # Reorder matrix according to ordered_items
+            indices = [items.index(item) for item in ordered_items]
+            matrix = matrix[np.ix_(indices, indices)]
+            items = ordered_items
+        else:
+            group_title = title
+            group_dict = {}
+
+        # Plot matrix
+        im = ax.imshow(matrix, cmap="RdYlGn_r", aspect="auto")
+        # if i == n - 1:
+        #     plt.colorbar(im, ax=ax, label="Distance")
+
+        ax.set_title(title.title(), fontsize=16)
+
+        # Set ticks (Matplotlib >= 3.6)
+        ax.set_xticks(range(len(items)))
+        ax.set_xticklabels(items, rotation=90, fontsize=8)
+        ax.set_yticks(range(len(items)))
+        ax.set_yticklabels(items, fontsize=8)
+
+        # Draw group boundaries if groups exist
+        if group_dict:
+            pos = 0
+            for group in group_dict.values():
+                pos += len(group)
+                ax.axhline(pos - 0.5, color="blue", linewidth=2)
+                ax.axvline(pos - 0.5, color="blue", linewidth=2)
+
+
+    cbar = fig.colorbar(im, ax=axes, location="right", fraction=0.046, pad=0.02)
+    cbar.set_label("Distance")
+
+    if out is not None:
+        plt.savefig(out, dpi=300, bbox_inches="tight")
+    else:
+        plt.show()
