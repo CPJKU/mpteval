@@ -3,10 +3,19 @@
 """This module provides an alignment function that aligns to chordified performance representations using DTW."""
 
 import numpy as np
-import parangonar as pa
+import matplotlib.pyplot as plt
 
-from mpteval.utils import save_matrix_plot
+from parangonar.dp.dtw import WDTW
+from parangonar.dp.metrics import cdist_local
 
+
+def save_matrix_plot(matrix, out_path, pred_align=None):
+    plt.imshow(matrix, aspect='auto')
+    if pred_align is not None:
+        plt.plot(pred_align[:, 1], pred_align[:, 0], color='green')
+    plt.colorbar()
+    plt.savefig(out_path)
+    plt.close()
 
 def align_chordified(p1, p2, dist_metric, out_dir, p1id, p2id,directional_weights=np.array([1, 2, 1])):
     """
@@ -31,12 +40,16 @@ def align_chordified(p1, p2, dist_metric, out_dir, p1id, p2id,directional_weight
     p2id : str
         The id of the p2, used in the file name for saving the outputs.
     """
-    
-    # compute pairwise distance matrix
-    pairwise_dist_m = pa.dp.metrics.cdist_local(p1, p2, metric=dist_metric) 
-    
-    matcher = pa.dp.WDTW(directional_weights, cdist_fun=pa.dp.metrics.cdist_local, metric=dist_metric)
-    pred_align_path, acc_dist, cost = matcher(p1, p2, return_matrices=True, return_cost=True)
+    # compute distance matrix
+    pairwise_dist_m = cdist_local(p1, p2, metric=dist_metric)
+
+    # init matcher and get alignment path
+    matcher = WDTW(directional_weights)
+    pred_align_path, acc_dist, cost = matcher.from_distance_matrix(
+        pairwise_dist_m, 
+        return_matrices=True, 
+        return_cost=True
+    )
     
     np.save(out_dir / f'{p1id}_{p2id}_pred_align.npy', pred_align_path)
     # loaded_matrix = np.load('output_matrix.npy')
