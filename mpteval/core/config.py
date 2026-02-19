@@ -1,6 +1,6 @@
 PERF_PIANO_ROLL_PARAMS = {
     "time_unit": "sec",
-    "time_div": 100,  # frames per time_unit, i.e., if time_unit is sec and time_div is 100, each frame has 10ms resolution
+    "time_div": 100, # frames per time_unit, i.e., if time_unit='sec' and time_div=100, then fps=100 frames/sec (each frame = 10ms)
     "onset_only": False,
     "piano_range": True,  # 88 x num_time_steps
     "time_margin": 0,  # amount of padding before and after piano roll
