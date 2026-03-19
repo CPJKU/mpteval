@@ -1,22 +1,43 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+import json
 from typing import Tuple, Union, List
 
-import numpy as np
 from fastdtw import fastdtw
 from scipy.spatial import distance as sp_dist
 from scipy.spatial.distance import cdist
 
-PERF_PIANO_ROLL_PARAMS = {
-    "time_unit": "sec",
-    "time_div": 100,  # frames per time_unit, i.e. with time_div=100 each frame has 10ms resolution
-    "onset_only": False,
-    "piano_range": True,  # 88 x num_time_steps
-    "time_margin": 0,  # amount of padding before and after piano roll
-    "return_idxs": False,
-}
+from .core.config import PERF_PIANO_ROLL_PARAMS 
 
-ONSET_OFFSET_TOLERANCE_NOTEWISE_EVAL = (
-    5 if PERF_PIANO_ROLL_PARAMS["time_div"] == 100 else 50
-)
+# public API for wildcard imports
+__all__ = [
+    "MusicEncoder",
+    "plot_piano_roll",
+    "create_note_list",
+    "is_monophonic",
+    "midi_to_piano_note",
+    "alignment_list_to_df",
+    "group_by_structure",
+    "pairwise_distance_matrix",
+    "accumulated_cost_matrix",
+    "optimal_warping_path",
+    "dynamic_time_warping",
+    "fast_dynamic_time_warping",
+    "greedy_note_alignment",
+    "notewise_alignment",
+] 
+
+class MusicEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, tuple):
+            return list(obj) 
+        return super().default(obj)
 
 def plot_piano_roll(piano_roll, params_dict=PERF_PIANO_ROLL_PARAMS, out_path=None):
     import matplotlib.pyplot as plt
@@ -43,8 +64,6 @@ def plot_piano_roll(piano_roll, params_dict=PERF_PIANO_ROLL_PARAMS, out_path=Non
         print(f"Piano roll saved to {out_path}")
     else:
         plt.show()
-
-
 
 def create_note_list(note_array, remove_silence=True):
 
@@ -81,6 +100,51 @@ def create_note_list(note_array, remove_silence=True):
 def is_monophonic(note_array: np.ndarray):
     return np.unique(note_array['onset_sec']).shape[0] == note_array.shape[0]
 
+def midi_to_piano_note(midi_num):
+    pitch_classes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+    pitch_class = pitch_classes[midi_num % 12]
+    octave = (midi_num // 12) - 1
+    return f"{pitch_class}{octave}"
+
+
+def alignment_list_to_df(align_list, p1id='p1id', p2id='p2id'):
+        
+        data = []
+        for d in align_list:
+            if d['label'] == 'match':
+                data.append(['match', d['performance_id'], d['score_id']])
+            elif d['label'] == 'insertion':
+                data.append(['insertion', d['performance_id'], np.nan])
+            elif d['label'] == 'deletion':
+                data.append(['deletion', np.nan, d['score_id']])
+        align_df = pd.DataFrame(data, columns=['label', p1id, p2id])
+        return align_df
+
+
+def group_by_structure(df, structure_column='structure'):
+    """
+    Group performance IDs by their structure value.
+    
+    Args:
+        df: DataFrame with columns 'perf_id' and 'structure'
+    
+    Returns:
+        dict: {'group_0': [perf_id1, perf_id2, ...], 'group_1': [...], ...}
+    """
+    groups = {}
+    
+    for group_idx, (structure, group_df) in enumerate(df.groupby(structure_column)):
+        groups[f'group_{group_idx}'] = group_df['perf_id'].tolist()
+    
+    return groups
+
+
+# 
+
+
+
+# ---------- REVIEW IF BELOW ARE NEEDED:
+
 def pairwise_distance_matrix(
     X: np.ndarray,
     Y: np.ndarray,
@@ -110,7 +174,6 @@ def pairwise_distance_matrix(
         Y = Y.T
     C = cdist(X, Y, metric=metric)
     return C
-
 
 def accumulated_cost_matrix(C: np.ndarray) -> np.ndarray:
     """
