@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Top-level module for mpteval"""
-import pkg_resources
+from importlib.metadata import version
+from importlib.resources import files
 
 # preprocessing and utils
 from mpteval.core import config
-from mpteval import utils
 from mpteval.utils import (
     is_monophonic,
     midi_to_piano_note,
@@ -21,15 +21,18 @@ from mpteval.utils import (
     greedy_note_alignment,
     notewise_alignment,
 )
+from mpteval.utils_plotting import (
+    plot_piano_roll_from_stream_note_arrays,
+    plot_correlation
+)
 
 from mpteval.preprocessing import preprocess
 from mpteval.alignment import dtw_align, dtw_dist
 from mpteval.clustering import cluster, cluster_eval
 
-from mpteval.features import articulation, dynamics, harmony, timing
-from mpteval.metrics import objective, subjective
+from mpteval.metrics_feature import articulation, dynamics, harmony, timing
+from mpteval.metrics import objective, majority
 
-__version__ = pkg_resources.get_distribution("mpteval").version
-
-REF_MID = pkg_resources.resource_filename("mpteval", "assets/ref.mid")
-PRED_MID = pkg_resources.resource_filename("mpteval", "assets/pred.mid")
+__version__ = version("mpteval")
+REF_MID = str(files("mpteval").joinpath("assets/ref.mid"))
+PRED_MID = str(files("mpteval").joinpath("assets/pred.mid"))

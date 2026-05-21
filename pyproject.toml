@@ -4,21 +4,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mpteval"
-version = "0.1.4"
-requires-python = ">=3.9"
+version = "1.0.1"
+requires-python = ">=3.10"
 dependencies = [
-            "numpy==1.26.4", 
-            "scipy==1.12.0",
-            "partitura==1.7.0",
-            "matplotlib==3.7.0",
-            "fastdtw==0.3.4"
+            "numpy>=1.26.4", 
+            "scipy>=1.12.0",
+            "parangonar>=3.2.0",
+            "partitura>=1.8.0",
+            "matplotlib>=3.7.0",
+            "fastdtw==0.3.4",
+            "scikit-learn>=1.0.0",
+            "tqdm>=4.0.0",
+            
 ]
-description = "Musically informed piano transcription metrics"
+description = "Musically motivated piano transcription evaluation"
 readme = "README.md"
 authors = [
-  { name="Patricia Hu", email="patricia.hu@jku.at"},
-  { name="Lukáš Samuel Marták" },
-  { name="Carlos Cancino-Chacón" }
+  { name="Patricia Hu"},
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
