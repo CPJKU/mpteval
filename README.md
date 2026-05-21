@@ -17,7 +17,7 @@ pip install mpteval
 
 Dependencies
 ------------
-- Python 3.9+
+- Python 3.10+
 - Parangonar 3.2.0
 - Partitura 1.8.0
 
