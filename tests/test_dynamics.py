@@ -10,7 +10,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from typing import Callable
 
-from mpteval.dynamics import (
+from mpteval.metrics_feature.dynamics import (
     midi_vel_to_rms,
     dynamic_range_in_db,
     get_upper_lower_stream_dynamic_range,

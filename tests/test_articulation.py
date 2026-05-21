@@ -10,8 +10,8 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from typing import Callable
 
-from mpteval.dynamics import PerformedChord
-from mpteval.articulation import (
+from mpteval.metrics_feature.dynamics import PerformedChord
+from mpteval.metrics_feature.articulation import (
     chordify_perf_note_array,
     skyline_melody_identification,
     get_kor_stream_func,

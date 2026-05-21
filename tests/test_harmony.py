@@ -9,7 +9,7 @@ import numpy as np
 import unittest
 from typing import Callable
 
-from mpteval.harmony import (
+from mpteval.metrics_feature.harmony import (
     get_tonal_tension_feature_func,
     harmony_metrics_from_perf
 )

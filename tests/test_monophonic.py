@@ -11,10 +11,10 @@ from typing import Callable
 
 import partitura as pt
 
-from mpteval.articulation import articulation_metrics_from_perf
-from mpteval.timing import timing_metrics_from_perf
-from mpteval.harmony import harmony_metrics_from_perf
-from mpteval.dynamics import dynamics_metrics_from_perf
+from mpteval.metrics_feature.articulation import articulation_metrics_from_perf
+from mpteval.metrics_feature.timing import timing_metrics_from_perf
+from mpteval.metrics_feature.harmony import harmony_metrics_from_perf
+from mpteval.metrics_feature.dynamics import dynamics_metrics_from_perf
 
 DATA = os.path.dirname(os.path.abspath(__file__)) + "/data"
 REF_MID = os.path.join(DATA, "monophonic.mid")
