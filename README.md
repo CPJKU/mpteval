@@ -1,4 +1,5 @@
-# Towards Musically Informed Evaluation of Piano Transcription Models
+Towards Musically Informed Evaluation of Piano Transcription Models
+===
 [//]: # (<p align="center"> )
 
 [![PyPI Package](https://img.shields.io/pypi/v/mpteval)](https://pypi.org/project/mpteval/)
@@ -7,14 +8,28 @@
 This repository provides a set of evaluation metrics designed for piano transcription evaluation. The metrics are musically informed, meaning they take into account the nuances of musical performance, such as dynamics, note onset, and duration, to offer more differentiated and musically relevant assessments of transcription quality.
 Note that these metrics are a work in progress and actively being developed/refined/extended. Expect future updates, and feel free to contribute or share feedback!
 
-# Metrics computation
+Setup
+=====
+The easiest way to install the package is via:
+```
+pip install mpteval
+```
+
+Dependencies
+------------
+- Python 3.9+
+- Parangonar 3.2.0
+- Partitura 1.8.0
+
+Metrics computation
+-------------------
 The following code loads a reference and a predicted MIDI and computes how well the transcription preserves timing information in the performance:
 
 ```
 import mpteval
 import partitura as pt
 
-from mpteval.timing import timing_metrics_from_perf
+from mpteval.metrics_feature.timing import timing_metrics_from_perf
 
 ref_perf = pt.load_performance_midi(mpteval.REF_MID)
 pred_perf = pt.load_performance_midi(mpteval.PRED_MID)
@@ -22,15 +37,10 @@ pred_perf = pt.load_performance_midi(mpteval.PRED_MID)
 timing_metrics = timing_metrics_from_perf(ref_perf, pred_perf)
 ```
 
-# Setup
-The easiest way to install the package is via:
-```
-pip install mpteval
-```
-
-## Dependencies
-- Python 3.9
-- Partitura 1.7.0
+Demo notebooks
+--------------
+You can find more examples of how the metrics and related functionality can be used in `notebooks_demo`.
+Likewise, you can check out our related work on [biases in transcription models](https://link.springer.com/content/pdf/10.1186/s13636-025-00428-z.pdf) and [evaluation of large scale transcribed datasets](TODO add link).
 
 # Citing
 If you use our metrics in your research, please cite the relevant [paper](https://arxiv.org/abs/2406.08454):
