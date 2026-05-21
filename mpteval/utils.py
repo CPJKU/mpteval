@@ -39,26 +39,20 @@ class MusicEncoder(json.JSONEncoder):
             return list(obj) 
         return super().default(obj)
 
-def plot_piano_roll(piano_roll, params_dict=PERF_PIANO_ROLL_PARAMS, out_path=None):
+def plot_piano_roll(piano_roll, time_div=1000, out_path=None):
     import matplotlib.pyplot as plt
 
-    _, ax = plt.subplots(1, figsize=(8, 4))
-    ax.imshow(
-        piano_roll.toarray(),
-        origin="lower",
-        cmap="YlGnBu",  # cmap='gray'
-        interpolation="nearest",
-        aspect="auto",
-    )
+    dense = np.array(piano_roll.todense() > 0).astype(int)
+    inverted = 1 - dense
+    fig, ax = plt.subplots(figsize=(20, 4))
+    ax.imshow(inverted, aspect='auto', origin='lower', cmap="gray")
 
-    if params_dict:
-        _, time_div = params_dict["time_unit"], params_dict["time_div"]
-        if time_div == 100:
-            ax.set_xlabel(f"Time (frame size = 10ms)")
-        if time_div == 1000:
-            ax.set_xlabel(f"Time (ms)")
+    if time_div == 1000:
+        ax.set_xlabel(f"Time (ms)")
+    else:
+        ax.set_xlabel(f"Time ({int(1000/time_div)} ms frame res.)")
 
-    ax.set_ylabel("Piano key")
+    ax.set_ylabel("Pitch")
     if out_path:
         plt.savefig(out_path)
         print(f"Piano roll saved to {out_path}")
