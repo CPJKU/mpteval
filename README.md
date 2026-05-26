@@ -40,7 +40,7 @@ timing_metrics = timing_metrics_from_perf(ref_perf, pred_perf)
 Demo notebooks
 --------------
 You can find more examples of how the metrics and related functionality can be used in `notebooks_demo`.
-Likewise, you can check out our related work on [biases in transcription models](https://link.springer.com/content/pdf/10.1186/s13636-025-00428-z.pdf) and [evaluation of large scale transcribed datasets](TODO add link).
+Likewise, you can check out our related work on [biases in transcription models](https://link.springer.com/content/pdf/10.1186/s13636-025-00428-z.pdf) and [evaluation of large scale transcribed datasets](https://arxiv.org/pdf/2605.25951).
 
 # Citing
 If you use our metrics in your research, please cite the relevant [paper](https://arxiv.org/abs/2406.08454):
